@@ -1,8 +1,18 @@
 {
   "extends": "@quasar/app-webpack/tsconfig-preset",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "jsx": "react",
+    "module": "ESNext",
+    "paths": {
+      "src/*": ["./src/*"]
+    },
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "moduleResolution": "Node"
   },
+  "include": ["src/**/*"],
   "exclude": [
     "./dist",
     "./.quasar",
