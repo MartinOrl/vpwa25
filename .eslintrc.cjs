@@ -55,6 +55,15 @@ module.exports = {
     'import',
   ],
 
+  settings: {
+    'import/resolver': {
+      alias: {
+        map: [['@', './src']],
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
+      },
+    },
+  },
+
   globals: {
     ga: 'readonly', // Google Analytics
     cordova: 'readonly',
@@ -66,6 +75,16 @@ module.exports = {
     process: 'readonly',
     Capacitor: 'readonly',
     chrome: 'readonly',
+  },
+  settings: {
+    'import/resolver': {
+      node: {
+        extensions: ['.ts', '.vue'],
+      },
+      webpack: {
+        config: './webpack.config.js',
+      },
+    },
   },
 
   // add your custom rules here

@@ -5,7 +5,7 @@
     "jsx": "react",
     "module": "ESNext",
     "paths": {
-      "src/*": ["./src/*"]
+      "@/*": ["./src/*"]
     },
     "allowJs": true,
     "resolveJsonModule": true,
