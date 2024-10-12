@@ -143,8 +143,8 @@ module.exports = configure(function (ctx) {
       // chainWebpackCustomSW (/* chain */) {},
 
       manifest: {
-        name: 'Slack',
-        short_name: 'Slack',
+        name: 'HuddleHub',
+        short_name: 'Huddle',
         description: '',
         display: 'standalone',
         orientation: 'portrait',
