@@ -8,7 +8,7 @@
           round
           icon="menu"
           aria-label="Menu"
-          color="accent"
+          color="white"
           @click="toggleLeftDrawer"
         />
 

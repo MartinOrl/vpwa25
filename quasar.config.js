@@ -52,7 +52,7 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-build
     build: {
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
       extendWebpack(cfg) {
         cfg.resolve.alias = {
           ...cfg.resolve.alias,
@@ -143,8 +143,8 @@ module.exports = configure(function (ctx) {
       // chainWebpackCustomSW (/* chain */) {},
 
       manifest: {
-        name: 'Slack',
-        short_name: 'Slack',
+        name: 'HuddleHub',
+        short_name: 'Huddle',
         description: '',
         display: 'standalone',
         orientation: 'portrait',
