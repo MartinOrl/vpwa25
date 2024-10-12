@@ -1,8 +1,8 @@
 {
-  "name": "slack",
+  "name": "huddlehub",
   "version": "0.0.1",
-  "description": "Fake Slack Project",
-  "productName": "Slack",
+  "description": "HuddleHub",
+  "productName": "HuddleHub",
   "author": "MartinOrl <xorlej@stuba.sk>",
   "private": true,
   "scripts": {
