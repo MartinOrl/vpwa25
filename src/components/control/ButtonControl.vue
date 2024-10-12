@@ -53,5 +53,6 @@ const buttonStyles = computed(() => ({
   borderStyle: 'solid',
   borderRadius: '4px',
   width: '100%',
+  cursor: disabled.value ? 'not-allowed' : 'pointer',
 }))
 </script>

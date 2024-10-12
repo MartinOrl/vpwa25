@@ -91,7 +91,7 @@
       <ButtonControl
         label="Register"
         variant="primary"
-        @click="register"
+        @click="handleRegister"
         :disabled="!isFormValid"
       />
       <p
@@ -115,10 +115,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineComponent, reactive} from 'vue'
+import { computed, defineComponent, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
-import {containers, spacing, palette} from '@/css/theme'
+import { containers, spacing, palette } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
+import { UserStatus } from '@/utils/types/user'
+const router = useRouter()
+const { login } = useAuthStore()
 
 // Reactive state for input
 const form = reactive({
@@ -144,8 +149,18 @@ const validationRules = [
   (value: string) => value.length >= 3 || 'Minimum 3 characters', // Minimum length rule
 ]
 
-const register = () => {
-  console.log('register clicked')
+const handleRegister = () => {
+  login(
+    {
+      email: form.email,
+      name: 'Joe',
+      nickName: 'Joe',
+      surname: 'Mama',
+      status: UserStatus.ONLINE,
+    },
+    'forcelogin',
+  )
+  router.push('/chat')
 }
 
 defineComponent({

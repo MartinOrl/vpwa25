@@ -1,11 +1,11 @@
-import {route} from 'quasar/wrappers'
+import { route } from 'quasar/wrappers'
 import {
   createMemoryHistory,
   createRouter,
   createWebHashHistory,
   createWebHistory,
 } from 'vue-router'
-import {useAuthStore} from '@/stores/authStore'
+import { useAuthStore } from '@/stores/authStore'
 import routes from './routes'
 
 /*
@@ -25,7 +25,7 @@ export default route(function () {
     : createWebHashHistory
 
   const Router = createRouter({
-    scrollBehavior: () => ({left: 0, top: 0}),
+    scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
     // Leave this as is and make changes in quasar.conf.js instead!
@@ -37,7 +37,7 @@ export default route(function () {
   Router.beforeEach((to, _, next) => {
     const authStore = useAuthStore()
 
-    if (!authStore.isLoggedIn && !to.path.startsWith('/auth')) {
+    if (!authStore.loadUser() && !to.path.startsWith('/auth')) {
       next('/auth/login')
     } else {
       next()

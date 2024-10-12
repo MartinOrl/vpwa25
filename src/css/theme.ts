@@ -15,4 +15,5 @@ export const spacing = (mult: number) => `${DEFAULT_SPACING * mult}px`
 
 export const containers = {
   login: '460px',
+  sidebar: '240px',
 }
