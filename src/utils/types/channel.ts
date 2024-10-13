@@ -3,12 +3,16 @@ enum ChannelPrivacy {
   PRIVATE = 'PRIVATE',
 }
 
-type Channel = {
+type ChannelInfo = {
   name: string
-  description: string
-  members: number
-  admin: string
   privacy: ChannelPrivacy
+  slug: string
+  admin: string
 }
 
-export {ChannelPrivacy, Channel}
+type Channel = ChannelInfo & {
+  description: string
+  members: number
+}
+
+export { ChannelPrivacy, Channel, ChannelInfo }

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { User } from '@/utils/types/user'
+import { User, UserStatus } from '@/utils/types/user'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -26,10 +26,13 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.token = null
     },
-    loadUser() {
-      if (this.isLoggedIn) {
-        return true
+    updateStatus(status: UserStatus) {
+      if (this.user) {
+        this.user.status = status
+        localStorage.setItem('user', JSON.stringify(this.user))
       }
+    },
+    loadUser() {
       const user = localStorage.getItem('user')
       const token = localStorage.getItem('token')
       if (user && token) {

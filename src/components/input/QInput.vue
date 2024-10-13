@@ -14,8 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch, computed} from 'vue'
-import {palette, spacing} from '@/css/theme' // Import the palette object
+import { ref, watch, computed } from 'vue'
+import { palette, spacing } from '@/css/theme' // Import the palette object
 
 // Define the component props
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
   label: string
   type: string
   errorMessage: string
-  validationRules: Array<(value: string) => boolean | string>
+  validationRules?: Array<(value: string) => boolean | string>
 }
 
 // Define props
@@ -52,8 +52,8 @@ const onInput = (event: Event) => {
 
 // Function to validate input based on validation rules
 const validateInput = () => {
-  if (props.validationRules.length > 0) {
-    const validationError = props.validationRules.find(
+  if ((props.validationRules ?? []).length > 0) {
+    const validationError = props.validationRules?.find(
       (rule) => rule(inputValue.value) !== true,
     )
     hasError.value = !!validationError
