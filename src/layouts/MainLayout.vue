@@ -67,7 +67,11 @@
             :channel="channel"
           />
         </q-list>
-        <div>
+        <div
+          :style="{
+            flex: '1',
+          }"
+        >
           <router-view />
         </div>
       </div>
