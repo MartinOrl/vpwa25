@@ -11,7 +11,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const path = require('path')
-const {configure} = require('quasar/wrappers')
+const { configure } = require('quasar/wrappers')
 
 module.exports = configure(function (ctx) {
   return {
