@@ -157,6 +157,7 @@ const handleRegister = () => {
       nickName: 'Joe',
       surname: 'Mama',
       status: UserStatus.ONLINE,
+      image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
     },
     'forcelogin',
   )
