@@ -80,15 +80,15 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineComponent, reactive} from 'vue'
-import {useRouter} from 'vue-router'
+import { computed, defineComponent, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
-import {containers, spacing, palette} from '@/css/theme'
-import {useAuthStore} from '@/stores/authStore'
-import {UserStatus} from '@/utils/types/user'
+import { containers, spacing, palette } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
+import { UserStatus } from '@/utils/types/user'
 const router = useRouter()
-const {login} = useAuthStore()
+const { login } = useAuthStore()
 
 // Reactive state for input
 const form = reactive({
@@ -112,6 +112,7 @@ const handleLogin = () => {
       nickName: 'Joe',
       surname: 'Mama',
       status: UserStatus.ONLINE,
+      image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
     },
     'forcelogin',
   )

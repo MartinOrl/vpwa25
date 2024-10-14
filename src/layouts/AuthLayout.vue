@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" :style="{background: palette.background}">
+  <q-layout view="lHh Lpr lFf" :style="{ background: palette.background }">
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -7,8 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import {defineComponent} from 'vue'
-import {palette} from '@/css/theme'
+import { defineComponent } from 'vue'
+import { palette } from '@/css/theme'
 
 defineOptions({
   name: 'AuthLayout',

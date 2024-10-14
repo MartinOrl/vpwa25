@@ -1,7 +1,7 @@
 enum UserStatus {
-  ONLINE = 'ONLINE',
-  OFFLINE = 'OFFLINE',
-  DO_NOT_DISTURB = 'DO_NOT_DISTURB',
+  ONLINE = 'Online',
+  OFFLINE = 'Offline',
+  DO_NOT_DISTURB = 'Do not disturb',
 }
 
 type User = {
@@ -10,6 +10,7 @@ type User = {
   nickName: string
   email: string
   status: UserStatus
+  image: string
 }
 
-export {UserStatus, User}
+export { UserStatus, User }

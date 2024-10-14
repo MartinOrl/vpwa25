@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang="ts">
-import {defineProps, defineEmits, computed} from 'vue'
-import {palette, spacing} from '@/css/theme'
+import { defineProps, defineEmits, computed } from 'vue'
+import { palette, spacing } from '@/css/theme'
 
 // Define the component props
 interface ButtonProps {
