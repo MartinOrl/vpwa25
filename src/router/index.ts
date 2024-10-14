@@ -23,6 +23,7 @@ export default route(function () {
     : process.env.VUE_ROUTER_MODE === 'history'
     ? createWebHistory
     : createWebHashHistory
+
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
@@ -33,11 +34,21 @@ export default route(function () {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   })
 
-  Router.beforeEach((to, _, next) => {
-    const authStore = useAuthStore()
+  const authStore = useAuthStore()
+  authStore.$subscribe(() => {
+    if (
+      !authStore.isLoggedIn &&
+      !Router.currentRoute.value.path.startsWith('/auth')
+    ) {
+      Router.push('/auth/login')
+    }
+  })
 
+  Router.beforeEach((to, _, next) => {
     if (!authStore.loadUser() && !to.path.startsWith('/auth')) {
       next('/auth/login')
+    } else if (to.path === '/' || to.path === '/auth') {
+      next('/chat')
     } else {
       next()
     }
