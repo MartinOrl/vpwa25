@@ -1,12 +1,14 @@
+const path = require('path')
+
 module.exports = {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
   // This option interrupts the configuration hierarchy at this file
   // Remove this if you have an higher level ESLint config file (it usually happens into a monorepos)
-  root: true,
 
   // https://eslint.vuejs.org/user-guide/#how-to-use-a-custom-parser
   // Must use parserOptions instead of "parser" to allow vue-eslint-parser to keep working
   // `parser: 'vue-eslint-parser'` is already included with any 'plugin:vue/**' config and should be omitted
+  root: true,
   parserOptions: {
     parser: require.resolve('@typescript-eslint/parser'),
     extraFileExtensions: ['.vue'],
@@ -82,7 +84,7 @@ module.exports = {
         extensions: ['.ts', '.vue'],
       },
       webpack: {
-        config: './webpack.config.js',
+        config: path.resolve(__dirname, 'webpack.config.js'),
       },
     },
   },
@@ -91,7 +93,7 @@ module.exports = {
   rules: {
     'prefer-promise-reject-errors': 'off',
 
-    quotes: ['warn', 'single', {avoidEscape: true}],
+    quotes: ['warn', 'single', { avoidEscape: true }],
 
     // this rule, if on, would require explicit return type on the `render` function
     '@typescript-eslint/explicit-function-return-type': 'off',
