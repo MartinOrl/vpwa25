@@ -1,48 +1,17 @@
-name: App Check
+name: Build and Test
 
 on:
-  # Trigger workflow on push and pull requests for any branch
   push:
     branches:
       - main
-      - develop # Add any other specific branches if needed
+      - develop
   pull_request:
     branches:
-      - '*' # This means the workflow will run on PRs for any branch
+      - "*"
 
 jobs:
-  # Job 1: Format Check (Prettier)
-  format-check:
-    name: Format Check
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x] # Define your Node.js version
-
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Node.js and Yarn
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
-
-      # Step 3: Install dependencies using Yarn
-      - name: Install dependencies
-        run: yarn install
-
-      # Step 4: Run Prettier to check file formatting
-      - name: Run Prettier (format:check)
-        run: yarn format:check
-
-  # Job 2: Lint Check (ESLint)
-  lint-check:
-    name: Lint Check
+  build-frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
 
     strategy:
@@ -50,50 +19,49 @@ jobs:
         node-version: [18.x]
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js and Yarn
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
 
-      # Step 3: Install dependencies using Yarn
-      - name: Install dependencies
+      - name: Install dependencies for frontend
+        working-directory: frontend
         run: yarn install
 
-      # Step 4: Run ESLint to check for linting issues
-      - name: Run ESLint (lint)
-        run: yarn lint
+      - name: Run Lint test for frontend
+        run: yarn web:lint
 
-  # Job 3: Build
-  build:
-    name: Build
-    runs-on: ubuntu-latest
+      - name: Run Prettier (format:check) for frontend
+        run: yarn web:format-check
 
-    strategy:
-      matrix:
-        node-version: [18.x]
+      - name: Build frontend
+        run: yarn web:build
 
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # build-backend:
+  #   name: Build Backend
+  #   runs-on: ubuntu-latest
 
-      # Step 2: Set up Node.js and Yarn
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      # Step 3: Install dependencies using Yarn
-      - name: Install dependencies
-        run: yarn install
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18.x
+  #         cache: "yarn"
 
-      # Step 4: Run the build step to ensure the app builds correctly
-      - name: Build the project
-        run: yarn build
+  #     - name: Install dependencies for backend
+  #       run: |
+  #         cd backend
+  #         yarn install
+
+  #     - name: Build backend
+  #       run: |
+  #         cd backend
+  #         yarn build
