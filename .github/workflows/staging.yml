@@ -34,16 +34,13 @@ jobs:
         run: yarn install
 
       - name: Run Lint test for frontend
-        working-directory: frontend
-        run: yarn lint
+        run: yarn web:lint
 
       - name: Run Prettier (format:check) for frontend
-        working-directory: frontend
-        run: yarn format:check
+        run: yarn web:format-check
 
       - name: Build frontend
-        working-directory: frontend
-        run: yarn build
+        run: yarn web:build
 
   # build-backend:
   #   name: Build Backend

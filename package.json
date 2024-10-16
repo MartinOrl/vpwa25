@@ -1,0 +1,22 @@
+{
+  "name": "huddlehub",
+  "version": "1.0.0",
+  "description": "HuddleHub",
+  "productName": "HuddleHub",
+  "main": "index.js",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "frontend"
+    ]
+  },
+  "scripts": {
+    "web:dev": "yarn workspace frontend dev",
+    "web:lint": "yarn workspace frontend lint",
+    "web:format-check": "yarn workspace frontend format:check",
+    "web:format": "yarn workspace frontend format",
+    "web:build": "yarn workspace frontend build"
+  },
+  "author": "",
+  "license": "ISC"
+}
