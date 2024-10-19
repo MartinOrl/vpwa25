@@ -10,8 +10,8 @@ on:
       - "*"
 
 jobs:
-  build-frontend:
-    name: Build Frontend
+  frontend-lint:
+    name: frontend-lint
     runs-on: ubuntu-latest
 
     strategy:
@@ -35,9 +35,54 @@ jobs:
 
       - name: Run Lint test for frontend
         run: yarn web:lint
+  frontend-format:
+    name: frontend-format
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies for frontend
+        working-directory: frontend
+        run: yarn install
 
       - name: Run Prettier (format:check) for frontend
         run: yarn web:format-check
+
+  frontend-build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies for frontend
+        working-directory: frontend
+        run: yarn install
 
       - name: Build frontend
         run: yarn web:build
