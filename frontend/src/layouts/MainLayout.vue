@@ -33,13 +33,14 @@
       >
         <ChannelsHistory />
       </div>
-      <div
+      <CommandPrompt />
+      <!-- <div
         :style="{
           marginLeft: 'auto',
         }"
       >
         <q-icon name="help" color="white" size="1.25rem" />
-      </div>
+      </div> -->
     </header>
 
     <div
@@ -62,7 +63,7 @@
       <div :style="mainContentStyles">
         <q-list :style="drawerStyles">
           <ChannelCard
-            v-for="channel in channelsTest"
+            v-for="channel in channels"
             :key="channel.slug"
             :channel="channel"
           />
@@ -84,9 +85,10 @@ import { computed, defineComponent } from 'vue'
 import type { CSSProperties } from 'vue'
 import ChannelCard from '@/components/channel/channelCard.vue'
 import ChannelsHistory from '@/components/channel/channelsHistory.vue'
+import CommandPrompt from '@/components/command/commandPrompt.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'
 import { containers, palette, spacing } from '@/css/theme'
-import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
+import { useChannelStore } from '@/stores/channelStore'
 
 defineOptions({
   name: 'MainLayout',
@@ -100,26 +102,9 @@ defineComponent({
   },
 })
 
-const channelsTest: ChannelInfo[] = [
-  {
-    name: 'General',
-    admin: 'admin',
-    slug: 'general',
-    privacy: ChannelPrivacy.PUBLIC,
-  },
-  {
-    name: 'Private',
-    admin: 'admin',
-    slug: 'private',
-    privacy: ChannelPrivacy.PRIVATE,
-  },
-  {
-    name: 'Secret',
-    admin: 'admin',
-    slug: 'secret',
-    privacy: ChannelPrivacy.PUBLIC,
-  },
-]
+const { getChannels } = useChannelStore()
+
+const channels = computed(() => getChannels())
 
 const mainContentStyles = computed<CSSProperties>(() => ({
   flex: '1',
