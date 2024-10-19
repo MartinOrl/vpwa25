@@ -38,7 +38,7 @@
         label="Enter your email"
         type="text"
         :errorMessage="''"
-        :validationRules="validationRules"
+        :validationRules="getValidationRules('email')"
         outlined
         clearable
         dense
@@ -48,7 +48,7 @@
         label="Enter your password"
         type="password"
         :errorMessage="''"
-        :validationRules="validationRules"
+        :validationRules="getValidationRules('password')"
         outlined
         clearable
         dense
@@ -86,6 +86,7 @@ import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
+import { ValidationRule } from '@/utils/types/misc'
 import { UserStatus } from '@/utils/types/user'
 const router = useRouter()
 const { login } = useAuthStore()
@@ -98,11 +99,23 @@ const form = reactive({
 
 const isFormValid = computed(() => form.email !== '' && form.password !== '')
 
-// Validation rules array
 const validationRules = [
   (value: string) => !!value || 'Field is required', // Required field rule
   (value: string) => value.length >= 3 || 'Minimum 3 characters', // Minimum length rule
 ]
+
+const emailValidation = (value: string) => {
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
+  return emailRegex.test(value) || 'Invalid email'
+}
+
+const getValidationRules = (value: string) => {
+  const rules: ValidationRule[] = [...validationRules]
+  if (value === 'email') {
+    rules.push(emailValidation)
+  }
+  return rules
+}
 
 const handleLogin = () => {
   login(

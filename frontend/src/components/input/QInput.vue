@@ -7,9 +7,8 @@
       :style="inputStyles"
       class="custom-input"
       @input="onInput"
-      @blur="validateInput"
     />
-    <div v-if="hasError" class="error-message">{{ props.errorMessage }}</div>
+    <div v-if="errorMessage" :style="errorStyles">{{ errorMessage }}</div>
   </div>
 </template>
 
@@ -22,7 +21,6 @@ interface Props {
   modelValue: string
   label: string
   type: string
-  errorMessage: string
   validationRules?: Array<(value: string) => boolean | string>
 }
 
@@ -34,7 +32,7 @@ const emit = defineEmits(['update:modelValue'])
 
 // Reactive data
 const inputValue = ref(props.modelValue)
-const hasError = ref(false)
+const errorMessage = ref('')
 
 // Watch for changes in the modelValue (v-model)
 watch(
@@ -48,6 +46,7 @@ watch(
 const onInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   emit('update:modelValue', target.value)
+  validateInput()
 }
 
 // Function to validate input based on validation rules
@@ -56,15 +55,27 @@ const validateInput = () => {
     const validationError = props.validationRules?.find(
       (rule) => rule(inputValue.value) !== true,
     )
-    hasError.value = !!validationError
+
+    if (validationError) {
+      const message = validationError(inputValue.value) as string
+      errorMessage.value = message
+    } else {
+      errorMessage.value = ''
+    }
   }
 }
+
+const errorStyles = computed(() => ({
+  color: palette.error,
+  fontSize: '12px',
+  marginTop: spacing(1),
+}))
 
 // Compute styles dynamically based on the palette
 const inputStyles = computed(() => ({
   backgroundColor: palette.background,
   borderColor:
-    hasError.value && inputValue.value ? palette.error : palette.border,
+    errorMessage.value && inputValue.value ? palette.error : palette.border,
   color: palette.textOnPrimary,
   padding: `
     ${spacing(3)} ${spacing(5)}
