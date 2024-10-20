@@ -3,11 +3,23 @@ enum ChannelPrivacy {
   PRIVATE = 'PRIVATE',
 }
 
+enum ChannelRole {
+  ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+}
+
 type ChannelInfo = {
   name: string
   privacy: ChannelPrivacy
   slug: string
   admin: string
+  members: ChannelMember[]
+}
+
+type ChannelMember = {
+  userId: number
+  role: ChannelRole
+  joinedAt: string
 }
 
 type Channel = ChannelInfo & {
@@ -15,4 +27,4 @@ type Channel = ChannelInfo & {
   members: number
 }
 
-export { ChannelPrivacy, Channel, ChannelInfo }
+export { ChannelPrivacy, Channel, ChannelInfo, ChannelRole }

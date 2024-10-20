@@ -120,6 +120,7 @@ const getValidationRules = (value: string) => {
 const handleLogin = () => {
   login(
     {
+      id: 1,
       email: form.email,
       name: 'Joe',
       nickName: 'Joe',

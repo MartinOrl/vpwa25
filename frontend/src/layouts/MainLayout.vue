@@ -34,13 +34,6 @@
         <ChannelsHistory />
       </div>
       <CommandPrompt />
-      <!-- <div
-        :style="{
-          marginLeft: 'auto',
-        }"
-      >
-        <q-icon name="help" color="white" size="1.25rem" />
-      </div> -->
     </header>
 
     <div
@@ -71,8 +64,13 @@
         <div
           :style="{
             flex: '1',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '100%',
+            height: '100%',
           }"
         >
+          <ChannelHeader />
           <router-view />
         </div>
       </div>
@@ -84,6 +82,7 @@
 import { computed, defineComponent } from 'vue'
 import type { CSSProperties } from 'vue'
 import ChannelCard from '@/components/channel/channelCard.vue'
+import ChannelHeader from '@/components/channel/channelHeader.vue'
 import ChannelsHistory from '@/components/channel/channelsHistory.vue'
 import CommandPrompt from '@/components/command/commandPrompt.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'

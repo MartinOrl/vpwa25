@@ -40,9 +40,10 @@ export const useAuthStore = defineStore('auth', {
       const user = localStorage.getItem('user')
       const token = localStorage.getItem('token')
 
-      const { setChannels } = useChannelStore()
+      const { setChannels, setActiveChannel } = useChannelStore()
 
       setChannels(channelsTest)
+      setActiveChannel(channelsTest[0])
 
       if (user && token) {
         this.user = JSON.parse(user)
