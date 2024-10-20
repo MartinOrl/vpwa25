@@ -1,109 +1,144 @@
 <template>
   <div
     :style="{
-      display: 'flex',
-      flexDirection: 'column',
-      width: '100%',
+      position: 'relative',
       height: '100%',
-      padding: '10px',
-      boxSizing: 'border-box',
     }"
   >
     <div
-      class="chat-container"
       :style="{
-        backgroundColor: palette.background,
-        maxWidth: '100%',
+        position: 'absolute',
+        height: '100%',
+        bottom: 0,
+        left: 0,
+        width: '100%',
+        overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        padding: '10px',
-        boxSizing: 'border-box',
-        flex: 1,
-        height: '100%',
-        justifyContent: 'flex-end',
       }"
+      id="chat-overflow"
     >
       <div
-        v-for="(msg, index) in messages"
-        :key="index"
-        class="message-bubble"
-        :style="getMessageStyle(msg)"
+        class="chat-container"
+        :style="{
+          backgroundColor: palette.background,
+          maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '10px',
+          boxSizing: 'border-box',
+          flex: 1,
+          justifyContent: 'flex-end',
+          marginTop: 'auto',
+        }"
       >
-        <img
-          :src="msg.image"
-          :style="{
-            width: '2.75rem',
-            height: '2.75rem',
-            cursor: 'pointer',
-            display: 'block',
-            borderRadius: spacing(2),
-          }"
-        />
-        <div>
-          <p>
-            {{ msg.sender }}
-            <span
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          class="message-bubble"
+          :style="getMessageStyle()"
+        >
+          <img
+            :src="msg.image"
+            :style="{
+              width: '2.25rem',
+              height: '2.25rem',
+              cursor: 'pointer',
+              display: 'block',
+              borderRadius: spacing(2),
+            }"
+          />
+          <div
+            :style="{
+              width: '100%',
+            }"
+          >
+            <div
               :style="{
-                fontSize: '0.75rem',
-                color: palette.textOpaque,
-                marginLeft: 'auto',
+                display: 'flex',
+                alignItems: 'flex-end',
               }"
-              >{{ msg.timestamp }}</span
             >
-          </p>
-          {{ msg.text }}
+              <p
+                :style="{
+                  fontWeight: 'bold',
+                }"
+              >
+                {{ msg.sender }}
+              </p>
+              <span
+                :style="{
+                  fontSize: '0.75rem',
+                  color: palette.textOpaque,
+                  marginLeft: spacing(1),
+                }"
+                >{{ msg.timestamp }}</span
+              >
+            </div>
+
+            <p
+              :style="{
+                marginTop: spacing(0.5),
+              }"
+            >
+              {{ msg.text }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
-    <div
-      class="input-container"
+  </div>
+  <div
+    class="input-container"
+    :style="{
+      display: 'flex',
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 'auto',
+      padding: `${spacing(2)} ${spacing(3)}`,
+    }"
+  >
+    <QInputComponent
+      v-model="message"
+      label="Type your message here..."
+      type="text"
+      errorMessage=""
       :style="{
-        display: 'flex',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 'auto',
+        flexGrow: 1,
+        borderColor: palette.primary,
+        color: palette.textOpaque,
       }"
-    >
-      <QInputComponent
-        v-model="message"
-        label="Type your message here..."
-        type="text"
-        errorMessage=""
-        :style="{
-          flexGrow: 1,
-          borderColor: palette.primary,
-          color: palette.textOpaque,
-        }"
-        outlined
-        clearable
-        dense
-      />
-      <ButtonControl
-        label="Send"
-        variant="primary"
-        @click="sendMessage"
-        :style="{
-          backgroundColor: palette.primary,
-          color: palette.textOnPrimary,
-          marginLeft: '10px',
-          padding: '12px 15px',
-          width: 'auto',
-        }"
-      />
-    </div>
+      outlined
+      clearable
+      dense
+    />
+    <ButtonControl
+      label="Send Message"
+      variant="primary"
+      @click="sendMessage"
+      :style="{
+        backgroundColor: palette.primary,
+        color: palette.textOnPrimary,
+        marginLeft: '10px',
+        padding: `${spacing(3)} ${spacing(8)}`,
+        width: 'auto',
+      }"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
-import { containers, palette, spacing } from '@/css/theme'
+import { palette, spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
-console.log(containers.sidebar)
+import { useChannelStore } from '@/stores/channelStore'
+import { ChannelInfo } from '@/utils/types/channel'
 const message = ref('')
 const { user } = useAuthStore()
+const channelStore = useChannelStore()
 
 type Message = {
   text: string
@@ -122,31 +157,60 @@ const messages = ref<Message[]>([
   },
 ])
 
-const sendMessage = () => {
+onMounted(() => {
+  const chatContainer = document.querySelector('#chat-overflow')
+  chatContainer?.scrollTo({
+    top: chatContainer.scrollHeight,
+  })
+})
+
+// if active channel changes, reset messages. Check it by using subscribe method from pinia
+watch(
+  () => channelStore.getActiveChannel() as ChannelInfo | null,
+  (_newChannel: ChannelInfo | null) => {
+    messages.value = [
+      {
+        text: 'Hello, how can I help you today?',
+        sender: 'Miguel',
+
+        image: 'https://randomuser.me/api/portraits/lego/6.jpg',
+        timestamp: '10:00 AM',
+      },
+    ]
+  },
+)
+
+const sendMessage = async () => {
   if (message.value.trim() !== '') {
     messages.value.push({
       text: message.value,
       sender: user?.name + ' ' + user?.surname,
       image: user?.image ?? '',
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toLocaleTimeString('en-us', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
     })
     message.value = ''
   }
+  await nextTick()
+  const chatContainer = document.querySelector('#chat-overflow')
+  chatContainer?.scrollTo({
+    top: chatContainer.scrollHeight,
+    behavior: 'smooth',
+  })
 }
 
-const getMessageStyle = (msg: Message) => {
-  const isSentByUser = msg.sender === user?.name + ' ' + user?.surname
+const getMessageStyle = () => {
   return {
-    backgroundColor: isSentByUser ? palette.accent : palette.primary,
     color: palette.textOnPrimary,
     padding: '10px 15px',
     display: 'flex',
-    gap: spacing(3),
+    gap: spacing(2),
     borderRadius: '20px',
     margin: '5px 0',
-    maxWidth: '80%',
-    alignSelf: isSentByUser ? 'flex-end' : 'flex-start',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    alignSelf: 'flex-start',
   }
 }
 </script>

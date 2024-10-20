@@ -5,6 +5,7 @@ enum UserStatus {
 }
 
 type User = {
+  id: number
   name: string
   surname: string
   nickName: string

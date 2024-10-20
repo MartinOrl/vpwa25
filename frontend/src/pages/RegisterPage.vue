@@ -166,6 +166,7 @@ const getValidationRules = (value: string) => {
 const handleRegister = () => {
   login(
     {
+      id: 1,
       email: form.email,
       name: 'Joe',
       nickName: 'Joe',
