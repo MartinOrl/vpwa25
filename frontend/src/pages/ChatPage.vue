@@ -89,7 +89,7 @@
     </div>
   </div>
   <div
-    class="input-container"
+    class="input-container break-md-col"
     :style="{
       display: 'flex',
       width: '100%',
@@ -97,6 +97,7 @@
       justifyContent: 'space-between',
       marginTop: 'auto',
       padding: `${spacing(2)} ${spacing(3)}`,
+      gap: spacing(3),
     }"
   >
     <QInputComponent
@@ -105,13 +106,14 @@
       type="text"
       errorMessage=""
       :style="{
-        flexGrow: 1,
         borderColor: palette.primary,
         color: palette.textOpaque,
+        flexGrow: 1,
       }"
       outlined
       clearable
       dense
+      class="break-md-w-full"
     />
     <ButtonControl
       label="Send Message"
@@ -120,10 +122,10 @@
       :style="{
         backgroundColor: palette.primary,
         color: palette.textOnPrimary,
-        marginLeft: '10px',
         padding: `${spacing(3)} ${spacing(8)}`,
         width: 'auto',
       }"
+      class="break-md-w-full"
     />
   </div>
 </template>
@@ -208,7 +210,6 @@ const getMessageStyle = () => {
     display: 'flex',
     gap: spacing(2),
     borderRadius: '20px',
-    margin: '5px 0',
     width: '100%',
     alignSelf: 'flex-start',
   }

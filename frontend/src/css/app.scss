@@ -7,3 +7,25 @@ p {
 .q-btn__content {
   width: 100%;
 }
+
+@media screen and (max-width: 786px) {
+  .channelList {
+    display: none;
+  }
+  .break-md-hide {
+    display: none !important;
+  }
+  .break-md-col {
+    flex-direction: column;
+  }
+  .break-md-w-full {
+    width: 100% !important;
+  }
+  .break-md-block {
+    display: block;
+  }
+  .break-md-w-unset {
+    max-width: none !important;
+    width: auto !important;
+  }
+}

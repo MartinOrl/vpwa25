@@ -22,7 +22,17 @@
           width: '100%',
           display: 'block',
         }"
-      ></div>
+      >
+        <div>
+          <div
+            :style="{
+              marginTop: 'auto',
+            }"
+          >
+            <ProfileIcon />
+          </div>
+        </div>
+      </div>
       <div
         :style="{
           maxWidth: containers.sidebar,
@@ -30,6 +40,7 @@
           display: 'flex',
           justifyContent: 'end',
         }"
+        class="break-md-w-unset"
       >
         <ChannelsHistory />
       </div>
@@ -43,7 +54,7 @@
         flex: '1',
       }"
     >
-      <div :style="utilsStyles">
+      <div :style="utilsStyles" class="break-md-hide">
         <div
           :style="{
             marginTop: 'auto',
@@ -54,7 +65,7 @@
       </div>
 
       <div :style="mainContentStyles">
-        <q-list :style="drawerStyles">
+        <q-list :style="drawerStyles" class="channelList">
           <ChannelCard
             v-for="channel in channels"
             :key="channel.slug"
@@ -114,7 +125,7 @@ const mainContentStyles = computed<CSSProperties>(() => ({
     0
     ${spacing(3)}
     ${spacing(3)}
-    0
+
   `,
   borderRadius: `
     ${spacing(3)}
@@ -131,6 +142,7 @@ const utilsStyles = computed<CSSProperties>(() => ({
   display: 'flex',
   flexDirection: 'column',
   marginBottom: spacing(8),
+  marginRight: `-${spacing(3)}`,
 }))
 
 const drawerStyles = computed<CSSProperties>(() => ({
