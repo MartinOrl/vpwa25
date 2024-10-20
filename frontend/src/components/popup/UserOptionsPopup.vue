@@ -45,7 +45,7 @@
                   fontSize: '0.875rem',
                 }"
               >
-                {{ user?.status }}
+                {{ statusType }}
               </p>
             </div>
           </div>
@@ -87,13 +87,67 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-select
+          <q-btn
             v-model="statusType"
-            :options="options"
             dense
-            color="primary"
-            @update:modelValue="handleSelect"
-          />
+            flat
+            :style="{
+              border: `1px solid ${palette.border}`,
+              borderRadius: spacing(2),
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              position: 'relative',
+            }"
+          >
+            <div
+              :style="{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: spacing(1),
+              }"
+            >
+              <p
+                :style="{
+                  textTransform: 'none',
+                  marginBottom: 0,
+                  fontSize: '0.875rem',
+                }"
+                @click="toggleStatusMenuDialog"
+              >
+                {{ statusSelect }}
+              </p>
+              <q-icon name="arrow_drop_down" />
+            </div>
+            <q-menu
+              v-model="statusMenuDialog"
+              anchor="bottom left"
+              self="top left"
+              :style="{
+                background: palette.background,
+                border: `1px solid ${palette.border}`,
+                borderRadius: spacing(2),
+                color: palette.textOpaque,
+              }"
+            >
+              <q-list
+                :style="{
+                  width: '100%',
+                }"
+              >
+                <q-item
+                  clickable
+                  v-close-popup
+                  v-for="option in _options"
+                  :key="option.label"
+                  @click="() => _handleSelect(option)"
+                >
+                  <q-item-section>{{ option.label }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </q-card-section>
 
         <q-card-actions align="right">
@@ -103,7 +157,7 @@
             label="Save"
             v-close-popup
             @click="handleUpdateStatus"
-            :disable="statusType === user?.status || !statusType"
+            :disable="statusSelect === user?.status || !statusSelect"
           />
         </q-card-actions>
       </q-card>
@@ -119,7 +173,9 @@ import { UserStatus } from '@/utils/types/user'
 const { user, logout, updateStatus } = useAuthStore()
 
 const statusDialog = ref(false)
-const statusType = ref(user?.status)
+const statusMenuDialog = ref(false)
+const statusType = computed(() => user?.status)
+const statusSelect = ref(user?.status)
 
 const buttonStyles = computed(() => ({
   background: 'transparent',
@@ -143,7 +199,7 @@ const dialogStyles = computed(() => ({
   color: palette.textOnPrimary,
 }))
 
-const options = [
+const _options = [
   { label: 'Online', value: UserStatus.ONLINE },
   { label: 'Do not disturb', value: UserStatus.DO_NOT_DISTURB },
   { label: 'Offline', value: UserStatus.OFFLINE },
@@ -162,12 +218,17 @@ function toggleStatusDialog() {
   statusDialog.value = !statusDialog.value
 }
 
-const handleSelect = (value: { label: string; value: UserStatus }) => {
+function toggleStatusMenuDialog() {
+  statusMenuDialog.value = !statusMenuDialog.value
+}
+
+const _handleSelect = (value: { label: string; value: UserStatus }) => {
   console.log(value)
-  statusType.value = value.value
+  statusSelect.value = value.value
+  statusMenuDialog.value = false
 }
 
 function handleUpdateStatus() {
-  updateStatus(statusType.value as UserStatus)
+  updateStatus(statusSelect.value as UserStatus)
 }
 </script>
