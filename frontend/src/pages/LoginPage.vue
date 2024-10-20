@@ -124,7 +124,7 @@ const handleLogin = () => {
       email: form.email,
       name: 'Joe',
       nickName: 'Joe',
-      surname: 'Mama',
+      surname: 'Doe',
       status: UserStatus.ONLINE,
       image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
     },
