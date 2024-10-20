@@ -103,6 +103,7 @@
     <QInputComponent
       v-model="message"
       label="Type your message here..."
+      @keydown.enter="sendMessage"
       type="text"
       errorMessage=""
       :style="{
