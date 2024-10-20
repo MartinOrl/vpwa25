@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <div :style="mainContentStyles">
+      <div :style="mainContentStyles" class="break-md-col">
         <q-list :style="drawerStyles" class="channelList">
           <ChannelCard
             v-for="channel in channels"
@@ -73,6 +73,70 @@
             :channel="channel"
           />
         </q-list>
+
+        <q-btn
+          flat
+          dense
+          class="hidden-md"
+          :style="{
+            width: '100%',
+            padding: '0',
+          }"
+        >
+          <div
+            :style="{
+              width: '100%',
+              borderBottom: `1px solid ${palette.border}`,
+            }"
+            @click="toggleChannelMenu"
+          >
+            <div
+              :style="{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingRight: spacing(6),
+              }"
+            >
+              <ChannelCard :channel="activeChannel" />
+              <q-icon
+                name="arrow_drop_down"
+                :style="{
+                  color: palette.textOpaque,
+                }"
+              />
+            </div>
+          </div>
+
+          <q-menu
+            v-model="channelMenu"
+            anchor="bottom left"
+            self="top left"
+            :style="{
+              background: palette.background,
+              border: `1px solid ${palette.border}`,
+              borderRadius: spacing(2),
+              color: palette.textOpaque,
+            }"
+          >
+            <q-list
+              :style="{
+                width: '100%',
+              }"
+            >
+              <q-item
+                clickable
+                v-close-popup
+                v-for="channel in channels"
+                :key="channel.name"
+              >
+                <q-item-section>
+                  <ChannelCard :channel="channel" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
         <div
           :style="{
             flex: '1',
@@ -91,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent } from 'vue'
+import { computed, defineComponent, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import ChannelCard from '@/components/channel/channelCard.vue'
 import ChannelHeader from '@/components/channel/channelHeader.vue'
@@ -100,6 +164,9 @@ import CommandPrompt from '@/components/command/commandPrompt.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'
 import { containers, palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
+import { ChannelInfo } from '@/utils/types/channel'
+
+const channelMenu = ref(false)
 
 defineOptions({
   name: 'MainLayout',
@@ -113,9 +180,15 @@ defineComponent({
   },
 })
 
-const { getChannels } = useChannelStore()
+const { getChannels, getActiveChannel } = useChannelStore()
 
 const channels = computed(() => getChannels())
+
+const activeChannel = computed(() => getActiveChannel() as ChannelInfo)
+
+function toggleChannelMenu() {
+  channelMenu.value = true
+}
 
 const mainContentStyles = computed<CSSProperties>(() => ({
   flex: '1',
