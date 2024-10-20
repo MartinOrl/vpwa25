@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
+import { channelsTest } from '@/tmp/dummy'
 import { User, UserStatus } from '@/utils/types/user'
+import { useChannelStore } from './channelStore'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -37,6 +39,11 @@ export const useAuthStore = defineStore('auth', {
     loadUser() {
       const user = localStorage.getItem('user')
       const token = localStorage.getItem('token')
+
+      const { setChannels } = useChannelStore()
+
+      setChannels(channelsTest)
+
       if (user && token) {
         this.user = JSON.parse(user)
         this.token = token
