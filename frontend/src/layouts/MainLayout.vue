@@ -22,6 +22,7 @@
           width: '100%',
           display: 'block',
         }"
+        class="hidden-md"
       >
         <div>
           <div

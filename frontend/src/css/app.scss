@@ -8,6 +8,12 @@ p {
   width: 100%;
 }
 
+@media screen and (min-width: 786px) {
+  .hidden-md {
+    display: none !important;
+  }
+}
+
 @media screen and (max-width: 786px) {
   .channelList {
     display: none;
