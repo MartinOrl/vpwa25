@@ -74,13 +74,12 @@
           />
         </q-list>
 
-        <q-btn
-          flat
-          dense
+        <div
           class="hidden-md"
           :style="{
             width: '100%',
             padding: '0',
+            position: 'relative',
           }"
         >
           <div
@@ -88,7 +87,6 @@
               width: '100%',
               borderBottom: `1px solid ${palette.border}`,
             }"
-            @click="toggleChannelMenu"
           >
             <div
               :style="{
@@ -96,18 +94,27 @@
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 paddingRight: spacing(6),
+                cursor: 'pointer',
               }"
             >
-              <ChannelCard :channel="activeChannel" />
+              <p
+                :style="{
+                  color: palette.textOnPrimary,
+                  padding: spacing(3),
+                  fontWeight: 'bold',
+                }"
+              >
+                Select Channel
+              </p>
               <q-icon
-                name="arrow_drop_down"
+                :name="channelMenu ? 'arrow_drop_up' : 'arrow_drop_down'"
                 :style="{
                   color: palette.textOpaque,
                 }"
+                @click="toggleChannelMenu"
               />
             </div>
           </div>
-
           <q-menu
             v-model="channelMenu"
             anchor="bottom left"
@@ -117,6 +124,7 @@
               border: `1px solid ${palette.border}`,
               borderRadius: spacing(2),
               color: palette.textOpaque,
+              width: '100%',
             }"
           >
             <q-list
@@ -129,6 +137,9 @@
                 v-close-popup
                 v-for="channel in channels"
                 :key="channel.name"
+                :style="{
+                  padding: '0',
+                }"
               >
                 <q-item-section>
                   <ChannelCard :channel="channel" />
@@ -136,7 +147,8 @@
               </q-item>
             </q-list>
           </q-menu>
-        </q-btn>
+        </div>
+
         <div
           :style="{
             flex: '1',
@@ -164,7 +176,6 @@ import CommandPrompt from '@/components/command/commandPrompt.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'
 import { containers, palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelInfo } from '@/utils/types/channel'
 
 const channelMenu = ref(false)
 
@@ -180,14 +191,13 @@ defineComponent({
   },
 })
 
-const { getChannels, getActiveChannel } = useChannelStore()
+const { getChannels } = useChannelStore()
 
 const channels = computed(() => getChannels())
 
-const activeChannel = computed(() => getActiveChannel() as ChannelInfo)
-
 function toggleChannelMenu() {
-  channelMenu.value = true
+  console.log('toggleChannelMenu')
+  channelMenu.value = !channelMenu.value
 }
 
 const mainContentStyles = computed<CSSProperties>(() => ({
