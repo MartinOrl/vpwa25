@@ -9,6 +9,7 @@ export const palette = {
   error: '#ff0033',
   border: 'rgba(255, 255, 255, 0.1)',
   textOpaque: 'rgba(255, 255, 255, 0.4)',
+  backgroundWhiteOpaque: 'rgba(255, 255, 255, 0.1)',
   status: {
     ONLINE: '#76ff03',
     OFFLINE: '#3C3D37',
