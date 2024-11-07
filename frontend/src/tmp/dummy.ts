@@ -69,6 +69,7 @@ const usersTest: User[] = [
 
 const channelsTest: ChannelInfo[] = [
   {
+    id: 1,
     name: 'General',
     admin: 'admin',
     slug: 'general',
@@ -92,6 +93,7 @@ const channelsTest: ChannelInfo[] = [
     ],
   },
   {
+    id: 2,
     name: 'Private',
     admin: 'admin',
     slug: 'private',
@@ -110,6 +112,7 @@ const channelsTest: ChannelInfo[] = [
     ],
   },
   {
+    id: 3,
     name: 'Secret',
     admin: 'admin',
     slug: 'secret',

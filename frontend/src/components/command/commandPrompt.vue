@@ -11,22 +11,23 @@
         @mousedown.stop
         @click.stop
         @click="getMenuDisplay"
+        @keypress.enter="processCommand"
       />
-
-      <q-icon name="search" size="1.25rem" :style="iconStyle" />
     </div>
     <q-menu
       v-model="commandListMenuOpen"
       fit
       anchor="bottom left"
-      :offset="[0, 10]"
+      self="bottom left"
       :style="menuStyles"
+      class="q-menu-notop"
       persistent
       noFocus
+      @before-show="repositionMenu"
     >
       <q-list>
         <q-item
-          v-for="option in options"
+          v-for="option in commandOptions"
           :key="option.command"
           clickable
           v-ripple
@@ -55,10 +56,12 @@
       v-model="suggestionsOpen"
       fit
       anchor="bottom left"
-      :offset="[0, 10]"
+      self="bottom left"
       :style="menuStyles"
+      class="q-menu-notop"
       persistent
       noFocus
+      @before-show="repositionMenu"
     >
       <q-list>
         <q-item
@@ -89,12 +92,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { CSSProperties, VNodeRef } from 'vue'
-import { palette, containers, spacing } from '@/css/theme'
+import { palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { getCommands } from '@/utils/commands'
 import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
-import Command from '@/utils/types/command'
+import type { Command } from '@/utils/types/command'
 
 const { setActiveCommand } = useCommandStore()
 const { getChannels } = useChannelStore()
@@ -124,15 +127,17 @@ const closeSuggestionsMenu = () => {
   suggestionsOpen.value = false
 }
 
-const options = computed(() => {
+const commandOptions = computed(() => {
+  const commandValue = commandInput.value.split(' ')[0]
   return getCommands().filter((option) => {
-    return option.command
-      .toLowerCase()
-      .includes(commandInput.value.toLowerCase())
+    return option.command.toLowerCase().includes(commandValue.toLowerCase())
   })
 })
 
+function repositionMenu() {}
+
 const selectedOption = ref('option1')
+const matchedCommand = ref<Command | null>(null)
 
 const suggestedChannels = computed(() => {
   const channelInput = commandInput.value.split(' ')[1]
@@ -150,13 +155,18 @@ const getMenuDisplay = () => {
   const command = inputParts[0]
   const kwargs = inputParts.slice(1)
 
-  const matchedCommand = getCommands().find(
-    (option) => option.command === command,
-  )
-  if (matchedCommand) {
+  matchedCommand.value =
+    getCommands().find((option) => option.command === command) || null
+
+  if (matchedCommand.value && kwargs.length) {
     closeCommandsMenu()
     const arg1 = kwargs[0]
-    if (arg1 && arg1.startsWith('#') && matchedCommand?.allows('channel')) {
+
+    if (
+      arg1 &&
+      arg1.startsWith('#') &&
+      matchedCommand.value?.allows('channel')
+    ) {
       openSuggestionsMenu()
     } else {
       closeSuggestionsMenu()
@@ -168,6 +178,32 @@ const getMenuDisplay = () => {
   }
 }
 
+const processCommand = () => {
+  const _inputParts = commandInput.value.split(' ')
+  const command = _inputParts[0]
+
+  const kwargs = _inputParts.slice(1)
+
+  const suggestion1 = kwargs[0]
+
+  if (suggestion1) {
+    if (suggestion1.startsWith('#')) {
+      const channel = getChannels()?.find(
+        (channel) => channel.name === suggestion1.slice(1),
+      )
+      if (channel) {
+        kwargs[0] = String(channel.id)
+      }
+    }
+  }
+
+  const commandValidated = matchedCommand.value?.validate(kwargs)
+  console.log('command', command, 'validation ', commandValidated)
+  if (!commandValidated) return
+
+  matchedCommand.value?.run(kwargs)
+}
+
 const selectCommand = (command: Command) => {
   setActiveCommand(command)
   commandInput.value = command.command + ' '
@@ -176,16 +212,16 @@ const selectCommand = (command: Command) => {
 
 const promptStyle = computed<CSSProperties>(() => ({
   background: palette.background,
-  maxWidth: containers.search,
-  width: '100%',
   padding: '0',
   borderRadius: spacing(2),
-  marginLeft: spacing(6),
   cursor: 'pointer',
   alignItems: 'start',
   position: 'relative',
   overflow: 'hidden',
   transition: 'none !important',
+  border: `1px solid ${palette.border}`,
+  color: palette.textOpaque,
+  flexGrow: 1,
 }))
 
 const onInput = (event: Event) => {
@@ -201,6 +237,7 @@ const menuStyles = computed<CSSProperties>(() => ({
   border: `1px solid ${palette.border}`,
   borderRadius: spacing(2),
   color: palette.textOpaque,
+  bottom: '72px !important',
 }))
 
 const commandStyle = computed<CSSProperties>(() => ({
@@ -218,11 +255,6 @@ const optionStyles = computed<CSSProperties>(() => ({
   alignItems: 'center',
 }))
 
-const iconStyle = computed<CSSProperties>(() => ({
-  color: palette.textOpaque,
-  padding: `${spacing(2)} ${spacing(3)}`,
-}))
-
 const toggleStyles = computed<CSSProperties>(() => ({
   color: palette.textOpaque,
   display: 'flex',
@@ -238,7 +270,7 @@ const inputStyles = computed<CSSProperties>(() => ({
   padding: `${spacing(2)} ${spacing(3)} ${spacing(2)} ${spacing(5)}`,
   outline: 'none',
   border: 'none',
-  width: '80%',
+  width: '100%',
 }))
 
 const handleClickSuggestion = (channel: ChannelInfo) => {
