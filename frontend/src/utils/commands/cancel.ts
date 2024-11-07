@@ -1,4 +1,8 @@
-import Command from '../types/command'
+import { useChannelStore } from '@/stores/channelStore'
+import { ChannelInfo } from '../types/channel'
+import type { Command } from '../types/command'
+
+const channelStoreRef = useChannelStore()
 
 const cancelChannelSubCommand: Command = {
   command: '/cancel',
@@ -6,10 +10,19 @@ const cancelChannelSubCommand: Command = {
   args: [],
   description: 'Cancel a channel subscription',
   example: '/cancel',
-  validate: () => {
-    return true
+  validate: (channelId: number) => {
+    return channelStoreRef.isChannelSubscribed(channelId)
   },
   allows: () => true,
+  run: (channelId?: number) => {
+    if (channelId) {
+      channelStoreRef.removeChannel(channelId)
+    } else {
+      const { id: activeChannelId } =
+        channelStoreRef.getActiveChannel() as ChannelInfo
+      channelStoreRef.removeChannel(activeChannelId)
+    }
+  },
 }
 
 export default cancelChannelSubCommand

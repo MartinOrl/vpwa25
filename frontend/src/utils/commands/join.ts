@@ -1,5 +1,5 @@
 import { ChannelPrivacy } from '../types/channel'
-import Command from '../types/command'
+import type { Command } from '../types/command'
 
 const joinChannelCommand: Command = {
   command: '/join',
@@ -23,6 +23,9 @@ const joinChannelCommand: Command = {
     return true
   },
   allows: (arg: string) => joinChannelCommand.args.includes(arg),
+  run: (args: string[]) => {
+    console.log('Join channel', args)
+  },
 }
 
 export default joinChannelCommand

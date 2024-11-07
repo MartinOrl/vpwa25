@@ -1,4 +1,4 @@
-import Command from '../types/command'
+import type { Command } from '../types/command'
 
 const inviteToChannelCommand: Command = {
   command: '/invite',
@@ -15,6 +15,9 @@ const inviteToChannelCommand: Command = {
     return true
   },
   allows: (arg: string) => inviteToChannelCommand.args.includes(arg),
+  run: (args: string[]) => {
+    console.log('Invite user to channel', args)
+  },
 }
 
 export default inviteToChannelCommand

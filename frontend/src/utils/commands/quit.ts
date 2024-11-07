@@ -1,4 +1,4 @@
-import Command from '../types/command'
+import type { Command } from '../types/command'
 
 const quitChannelCommand: Command = {
   command: '/quit',
@@ -10,6 +10,9 @@ const quitChannelCommand: Command = {
     return true
   },
   allows: () => true,
+  run: () => {
+    console.log('Close the channel')
+  },
 }
 
 export default quitChannelCommand

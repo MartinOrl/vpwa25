@@ -4,8 +4,20 @@ type Command = {
   args: string[]
   description: string
   example: string
-  validate: (args: string[]) => boolean
-  allows: (arg: string) => boolean
+  validate: (...args: any[]) => boolean
+  allows: (...args: any[]) => boolean
+  run: (...args: any[]) => void
 }
 
-export default Command
+type EventType = string
+
+type Event<T> = {
+  type: EventType
+  data?: T
+}
+
+enum Events {
+  ListChannelMembers = 'list_channel_members',
+}
+
+export { Command, EventType, Event, Events }

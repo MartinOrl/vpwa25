@@ -1,4 +1,4 @@
-import Command from '../types/command'
+import type { Command } from '../types/command'
 
 const kickUserCommand: Command = {
   command: '/kick',
@@ -15,6 +15,9 @@ const kickUserCommand: Command = {
     return true
   },
   allows: (arg: string) => kickUserCommand.args.includes(arg),
+  run: (args: string[]) => {
+    console.log('Kick user from channel', args)
+  },
 }
 
 export default kickUserCommand

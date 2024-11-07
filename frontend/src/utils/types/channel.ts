@@ -9,6 +9,7 @@ enum ChannelRole {
 }
 
 type ChannelInfo = {
+  id: number
   name: string
   privacy: ChannelPrivacy
   slug: string

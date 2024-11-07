@@ -1,4 +1,4 @@
-import Command from '../types/command'
+import type { Command } from '../types/command'
 
 const revokeFromChannelCommand: Command = {
   command: '/revoke',
@@ -15,6 +15,9 @@ const revokeFromChannelCommand: Command = {
     return true
   },
   allows: (arg: string) => revokeFromChannelCommand.args.includes(arg),
+  run: (args: string[]) => {
+    console.log('Revoke user from channel', args)
+  },
 }
 
 export default revokeFromChannelCommand

@@ -1,4 +1,4 @@
-import Command from '../types/command'
+import type { Command } from '../types/command'
 import cancelChannelSubCommand from './cancel'
 import inviteToChannelCommand from './invite'
 import joinChannelCommand from './join'
