@@ -1,9 +1,10 @@
 import type { Command } from '../types/command'
+import { CommandAllowRule } from '../types/misc'
 
 const kickUserCommand: Command = {
   command: '/kick',
   shadow: '/kick @<nickname>',
-  args: ['nickname'],
+  args: [CommandAllowRule.NICKNAME],
   description: 'Kick user from a channel',
   example: '/kick @user',
   validate: (args: string[]) => {
@@ -14,7 +15,7 @@ const kickUserCommand: Command = {
 
     return true
   },
-  allows: (arg: string) => kickUserCommand.args.includes(arg),
+  allows: (arg: CommandAllowRule) => kickUserCommand.args.includes(arg),
   run: (args: string[]) => {
     console.log('Kick user from channel', args)
   },

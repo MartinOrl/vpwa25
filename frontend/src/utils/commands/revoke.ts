@@ -1,9 +1,10 @@
 import type { Command } from '../types/command'
+import { CommandAllowRule } from '../types/misc'
 
 const revokeFromChannelCommand: Command = {
   command: '/revoke',
   shadow: '/revoke @<nickname>',
-  args: ['nickname'],
+  args: [CommandAllowRule.NICKNAME],
   description: 'Revoke a user from a channel',
   example: '/revoke @user',
   validate: (args: string[]) => {
@@ -14,7 +15,8 @@ const revokeFromChannelCommand: Command = {
 
     return true
   },
-  allows: (arg: string) => revokeFromChannelCommand.args.includes(arg),
+  allows: (arg: CommandAllowRule) =>
+    revokeFromChannelCommand.args.includes(arg),
   run: (args: string[]) => {
     console.log('Revoke user from channel', args)
   },

@@ -10,11 +10,16 @@ const cancelChannelSubCommand: Command = {
   args: [],
   description: 'Cancel a channel subscription',
   example: '/cancel',
-  validate: (channelId: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validate: (args: any[]) => {
+    const channelId = Number(args?.[0])
+
     return channelStoreRef.isChannelSubscribed(channelId)
   },
   allows: () => true,
-  run: (channelId?: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  run: (args?: any[]) => {
+    const channelId = Number(args?.[0])
     if (channelId) {
       channelStoreRef.removeChannel(channelId)
     } else {
