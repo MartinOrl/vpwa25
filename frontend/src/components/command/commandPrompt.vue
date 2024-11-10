@@ -1,6 +1,6 @@
 <template>
-  <div dense :style="promptStyle" noCaps flat>
-    <div :style="toggleStyles">
+  <div :style="promptStyle">
+    <form @submit.prevent="processSend" :style="toggleStyles">
       <input
         v-model="commandInput"
         ref="commandField"
@@ -11,9 +11,8 @@
         @mousedown.stop
         @click.stop
         @click="getMenuDisplay"
-        @keypress.enter="processCommand"
       />
-    </div>
+    </form>
     <q-menu
       v-model="commandListMenuOpen"
       fit
@@ -23,7 +22,7 @@
       class="q-menu-notop"
       persistent
       noFocus
-      @before-show="repositionMenu"
+      auto-close
     >
       <q-list>
         <q-item
@@ -61,11 +60,11 @@
       class="q-menu-notop"
       persistent
       noFocus
-      @before-show="repositionMenu"
+      auto-close
     >
       <q-list>
         <q-item
-          v-for="option in suggestedChannels"
+          v-for="option in suggestions"
           :key="option.name"
           clickable
           v-ripple
@@ -76,7 +75,13 @@
         >
           <q-item-section :style="optionStyles">
             <q-icon
-              :name="option.privacy === ChannelPrivacy.PRIVATE ? 'lock' : 'tag'"
+              :name="
+                'privacy' in option
+                  ? option.privacy === ChannelPrivacy.PRIVATE
+                    ? 'lock'
+                    : 'tag'
+                  : 'person'
+              "
               :style="{
                 color: palette.textOpaque,
               }"
@@ -85,22 +90,37 @@
           </q-item-section>
         </q-item>
       </q-list>
+      <div
+        v-if="!suggestions?.length"
+        :style="{
+          padding: spacing(3),
+          color: palette.textOpaque,
+        }"
+      >
+        No suggestions
+      </div>
     </q-menu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties, VNodeRef } from 'vue'
 import { palette, spacing } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
+import { usersTest } from '@/tmp/dummy'
 import { getCommands } from '@/utils/commands'
-import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
-import type { Command } from '@/utils/types/command'
+import { ChannelPrivacy, ChannelData } from '@/utils/types/channel'
+import { Events, type Command } from '@/utils/types/command'
+import { CommandAllowRule } from '@/utils/types/misc'
+import { User } from '@/utils/types/user'
 
-const { setActiveCommand } = useCommandStore()
-const { getChannels } = useChannelStore()
+const commandStore = useCommandStore()
+const { setActiveCommand, callEvent } = commandStore
+const { getChannels, processSendMessage, activeChannel } = useChannelStore()
+const { user } = useAuthStore()
 
 const commandInput = ref('')
 const commandField = ref<VNodeRef | null>(null)
@@ -112,6 +132,16 @@ const openCommandsMenu = async () => {
   await nextTick()
   commandField.value.focus()
 }
+
+watch(commandListMenuOpen, (value) => {
+  if (value) {
+    const _inputParts = commandInput.value.split(' ')
+    const command = _inputParts[0]
+    if (!command.startsWith('/')) {
+      commandListMenuOpen.value = false
+    }
+  }
+})
 
 const closeCommandsMenu = () => {
   commandListMenuOpen.value = false
@@ -134,20 +164,38 @@ const commandOptions = computed(() => {
   })
 })
 
-function repositionMenu() {}
-
 const selectedOption = ref('option1')
 const matchedCommand = ref<Command | null>(null)
 
-const suggestedChannels = computed(() => {
-  const channelInput = commandInput.value.split(' ')[1]
+const suggestions = computed(() => {
+  const _inputParts = commandInput.value.split(' ')
+  const kwargs = _inputParts.slice(1)
 
-  if (!channelInput.startsWith('#')) return []
+  const suggestionRequest = kwargs[0] || ''
 
-  const channelName = channelInput.slice(1)
-  return getChannels()?.filter((channel) =>
-    channel.name.toLowerCase().includes(channelName.toLowerCase()),
-  )
+  if (suggestionRequest.startsWith('#')) {
+    const channelName = suggestionRequest.slice(1)
+    return getChannels()?.filter((channel) =>
+      channel.name.toLowerCase().includes(channelName.toLowerCase()),
+    )
+  }
+
+  if (suggestionRequest.startsWith('@')) {
+    const nickName = suggestionRequest.slice(1)
+
+    const usersData = [...usersTest]
+    const membersIDs =
+      activeChannel?.members.map((member) => member.userId) || []
+
+    return usersData.filter(
+      (member) =>
+        member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
+        member.id !== user?.id &&
+        !membersIDs.includes(member.id),
+    )
+  }
+
+  return null
 })
 
 const getMenuDisplay = () => {
@@ -165,7 +213,13 @@ const getMenuDisplay = () => {
     if (
       arg1 &&
       arg1.startsWith('#') &&
-      matchedCommand.value?.allows('channel')
+      matchedCommand.value?.allows(CommandAllowRule.CHANNEL)
+    ) {
+      openSuggestionsMenu()
+    } else if (
+      arg1 &&
+      arg1.startsWith('@') &&
+      matchedCommand.value?.allows(CommandAllowRule.NICKNAME)
     ) {
       openSuggestionsMenu()
     } else {
@@ -173,15 +227,41 @@ const getMenuDisplay = () => {
     }
   } else {
     closeSuggestionsMenu()
-    openCommandsMenu()
+    if (command.startsWith('/')) {
+      openCommandsMenu()
+    } else {
+      closeCommandsMenu()
+    }
     setActiveCommand(null)
+  }
+}
+
+commandStore.$subscribe(() => {
+  const eventType = commandStore.event?.type as string
+  if (eventType === Events.RequestSendMessage) {
+    processSend()
+  } else if (eventType === Events.SendMessage) {
+    const message = commandInput.value
+    processSendMessage(message)
+    clearInput()
+  }
+})
+
+const processSend = () => {
+  const _inputParts = commandInput.value.split(' ')
+  const command = _inputParts[0]
+  if (command.startsWith('/')) {
+    processCommand()
+  } else {
+    callEvent<string>({
+      type: Events.SendMessage,
+      data: commandInput.value,
+    })
   }
 }
 
 const processCommand = () => {
   const _inputParts = commandInput.value.split(' ')
-  const command = _inputParts[0]
-
   const kwargs = _inputParts.slice(1)
 
   const suggestion1 = kwargs[0]
@@ -193,15 +273,22 @@ const processCommand = () => {
       )
       if (channel) {
         kwargs[0] = String(channel.id)
-      }
+      } else return
     }
   }
 
   const commandValidated = matchedCommand.value?.validate(kwargs)
-  console.log('command', command, 'validation ', commandValidated)
+
+  clearInput()
   if (!commandValidated) return
 
   matchedCommand.value?.run(kwargs)
+}
+
+const clearInput = async () => {
+  commandInput.value = ''
+  await nextTick()
+  getMenuDisplay()
 }
 
 const selectCommand = (command: Command) => {
@@ -267,14 +354,22 @@ const toggleStyles = computed<CSSProperties>(() => ({
 const inputStyles = computed<CSSProperties>(() => ({
   backgroundColor: palette.background,
   color: palette.textOnPrimary,
-  padding: `${spacing(2)} ${spacing(3)} ${spacing(2)} ${spacing(5)}`,
+  padding: `${spacing(2)} ${spacing(3)} ${spacing(3)} ${spacing(5)}`,
   outline: 'none',
   border: 'none',
   width: '100%',
+  fontSize: '1rem',
 }))
 
-const handleClickSuggestion = (channel: ChannelInfo) => {
-  commandInput.value = commandInput.value.split(' ')[0] + ' #' + channel.name
+const handleClickSuggestion = (suggestion: User | ChannelData) => {
+  // commandInput.value = commandInput.value.split(' ')[0] + ' #' + channel.name
+  if ('privacy' in suggestion) {
+    commandInput.value =
+      commandInput.value.split(' ')[0] + ' #' + suggestion.name
+  } else {
+    commandInput.value =
+      commandInput.value.split(' ')[0] + ' @' + suggestion.nickName
+  }
   closeSuggestionsMenu()
 }
 
