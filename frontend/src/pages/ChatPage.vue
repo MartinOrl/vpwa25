@@ -25,7 +25,7 @@
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '10px',
+          padding: '10px 0',
           boxSizing: 'border-box',
           flex: 1,
           justifyContent: 'flex-end',
@@ -36,54 +36,17 @@
           v-for="(msg, index) in messages"
           :key="index"
           class="message-bubble"
-          :style="getMessageStyle()"
         >
-          <img
-            :src="msg.image"
-            :style="{
-              width: '2.25rem',
-              height: '2.25rem',
-              cursor: 'pointer',
-              display: 'block',
-              borderRadius: spacing(2),
-            }"
+          <MessageDateSeparator
+            v-if="getShowDateSeparator(index)"
+            :date="new Date(msg.timestamp)"
           />
-          <div
-            :style="{
-              width: '100%',
-            }"
-          >
-            <div
-              :style="{
-                display: 'flex',
-                alignItems: 'flex-end',
-              }"
-            >
-              <p
-                :style="{
-                  fontWeight: 'bold',
-                }"
-              >
-                {{ msg.sender }}
-              </p>
-              <span
-                :style="{
-                  fontSize: '0.75rem',
-                  color: palette.textOpaque,
-                  marginLeft: spacing(1),
-                }"
-                >{{ msg.timestamp }}</span
-              >
-            </div>
-
-            <p
-              :style="{
-                marginTop: spacing(0.5),
-              }"
-            >
-              {{ msg.text }}
-            </p>
+          <div :style="getMessageStyle()">
+            <ChannelMessage :message="msg" />
           </div>
+        </div>
+        <div v-if="!messages.length" :style="noMessagesStyle">
+          <p>No messages yet. Start the conversation!</p>
         </div>
       </div>
     </div>
@@ -92,62 +55,51 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onUpdated } from 'vue'
+import ChannelMessage from '@/components/channel/channelMessage.vue'
+import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
 import ChatInput from '@/components/ChatInput.vue'
 import { palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelInfo } from '@/utils/types/channel'
 const channelStore = useChannelStore()
 
-type Message = {
-  text: string
-  sender: string
-  image: string
-  timestamp: string
-}
+const messages = computed(() => {
+  return channelStore.getChannelMessages()
+})
 
-const messages = ref<Message[]>([
-  {
-    text: 'Hello, how can I help you today?',
-    sender: 'Miguel',
-
-    image: 'https://randomuser.me/api/portraits/lego/6.jpg',
-    timestamp: '10:00 AM',
-  },
-])
-
-onMounted(() => {
+onUpdated(async () => {
+  await nextTick()
   const chatContainer = document.querySelector('#chat-overflow')
   chatContainer?.scrollTo({
     top: chatContainer.scrollHeight,
+    behavior: 'smooth',
   })
 })
 
-// if active channel changes, reset messages. Check it by using subscribe method from pinia
-watch(
-  () => channelStore.getActiveChannel() as ChannelInfo | null,
-  (_newChannel: ChannelInfo | null) => {
-    messages.value = [
-      {
-        text: 'Hello, how can I help you today?',
-        sender: 'Miguel',
-
-        image: 'https://randomuser.me/api/portraits/lego/6.jpg',
-        timestamp: '10:00 AM',
-      },
-    ]
-  },
-)
+const getShowDateSeparator = (index: number) => {
+  if (index === 0) return true
+  const currentDate = new Date(messages.value[index].timestamp)
+  const previousDate = new Date(messages.value[index - 1].timestamp)
+  return currentDate.getDate() !== previousDate.getDate()
+}
 
 const getMessageStyle = () => {
   return {
     color: palette.textOnPrimary,
-    padding: '10px 15px',
+    padding: '10px 20px',
     display: 'flex',
     gap: spacing(2),
     borderRadius: '20px',
     width: '100%',
     alignSelf: 'flex-start',
   }
+}
+
+const noMessagesStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: '100%',
+  color: palette.textOpaque,
 }
 </script>
