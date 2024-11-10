@@ -1,18 +1,24 @@
 import { defineStore } from 'pinia'
-import type { ChannelInfo } from '@/utils/types/channel'
+import {
+  ChannelRole,
+  type ChannelData,
+  type ChannelInfo,
+  type ChannelMessage,
+} from '@/utils/types/channel'
+import { useAuthStore } from './authStore'
 
 export const useChannelStore = defineStore('channel', {
   state: () => ({
-    channels: [] as ChannelInfo[] | null,
-    activeChannel: null as ChannelInfo | null,
+    channels: [] as ChannelData[] | null,
+    activeChannel: null as ChannelData | null,
     history: [] as number[], // history is based on ids
   }),
 
   actions: {
-    setChannels(channels: ChannelInfo[] | null) {
+    setChannels(channels: ChannelData[] | null) {
       this.channels = channels
     },
-    setActiveChannel(channel: ChannelInfo | null) {
+    setActiveChannel(channel: ChannelData | null) {
       this.activeChannel = channel
       this.history.push(channel?.id || 0)
     },
@@ -25,6 +31,53 @@ export const useChannelStore = defineStore('channel', {
 
     getChannelById(id: number) {
       return this.channels?.find((c: ChannelInfo) => c.id === id) || null
+    },
+
+    getChannelMessages() {
+      return this.activeChannel?.messages || []
+    },
+
+    addChannel(channel: ChannelData) {
+      this.channels?.push(channel)
+      this.setActiveChannel(channel)
+    },
+
+    removeChannelMember(channelId: number, userId: number) {
+      const channel = this.channels?.find(
+        (c: ChannelInfo) => c.id === channelId,
+      )
+      if (channel) {
+        channel.members = channel.members.filter((m) => m.userId !== userId)
+      }
+    },
+
+    addChannelMember(channelId: number, userId: number) {
+      const channel = this.channels?.find(
+        (c: ChannelInfo) => c.id === channelId,
+      )
+      if (channel) {
+        if (!channel.members.some((m) => m.userId === userId)) {
+          channel.members.push({
+            userId,
+            role: ChannelRole.MEMBER,
+            joinedAt: new Date().toISOString(),
+          })
+        }
+      }
+    },
+
+    processSendMessage(message: string) {
+      const { user } = useAuthStore()
+
+      const messageObj: ChannelMessage = {
+        channelID: this.activeChannel?.id || 0,
+        content: message,
+        messageID: 100 + Math.floor(Math.random() * 1000),
+        timestamp: new Date().toISOString(),
+        senderID: user?.id || 0,
+      }
+
+      this.activeChannel?.messages.push(messageObj)
     },
 
     removeChannel(channelId: number) {
