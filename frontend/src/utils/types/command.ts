@@ -1,3 +1,5 @@
+import { CommandAllowRule } from './misc'
+
 type Command = {
   command: string
   shadow: string
@@ -5,7 +7,7 @@ type Command = {
   description: string
   example: string
   validate: (...args: any[]) => boolean
-  allows: (...args: any[]) => boolean
+  allows: (...args: CommandAllowRule[]) => boolean
   run: (...args: any[]) => void
 }
 
@@ -18,6 +20,8 @@ type Event<T> = {
 
 enum Events {
   ListChannelMembers = 'list_channel_members',
+  RequestSendMessage = 'request_send_message',
+  SendMessage = 'send_message',
 }
 
 export { Command, EventType, Event, Events }

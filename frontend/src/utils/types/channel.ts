@@ -8,6 +8,14 @@ enum ChannelRole {
   MEMBER = 'MEMBER',
 }
 
+type ChannelMessage = {
+  messageID: number
+  content: string
+  timestamp: string
+  senderID: number
+  channelID: number
+}
+
 type ChannelInfo = {
   id: number
   name: string
@@ -28,4 +36,15 @@ type Channel = ChannelInfo & {
   members: number
 }
 
-export { ChannelPrivacy, Channel, ChannelInfo, ChannelRole }
+type ChannelData = ChannelInfo & {
+  messages: ChannelMessage[]
+}
+
+export {
+  ChannelPrivacy,
+  Channel,
+  ChannelInfo,
+  ChannelRole,
+  ChannelData,
+  ChannelMessage,
+}

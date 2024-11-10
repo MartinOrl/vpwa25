@@ -1,3 +1,8 @@
 type ValidationRule = (value: string) => boolean | string
 
-export { ValidationRule }
+enum CommandAllowRule {
+  NICKNAME = 'NICKNAME',
+  CHANNEL = 'CHANNEL',
+}
+
+export { ValidationRule, CommandAllowRule }
