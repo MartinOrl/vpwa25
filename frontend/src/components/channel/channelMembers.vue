@@ -152,6 +152,7 @@ import { UserStatus } from '@/utils/types/user'
 
 const { getChannelById, getActiveChannel } = useChannelStore()
 const commandStore = useCommandStore()
+const channelStore = useChannelStore()
 
 const membersToolbar = ref(false)
 const channelId = ref(0)
@@ -166,6 +167,11 @@ const openMembersToolbar = () => {
 
   membersToolbar.value = true
 }
+
+channelStore.$subscribe(() => {
+  const activeChannelId = getActiveChannel()?.id as number
+  channelId.value = activeChannelId
+})
 
 commandStore.$subscribe(() => {
   const eventType = commandStore.event?.type as string
