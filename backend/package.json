@@ -1,6 +1,8 @@
 {
-  "name": "huddlehub",
-  "version": "0.0.0",
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "HuddleHub",
+  "productName": "HuddleHub",
   "private": true,
   "type": "module",
   "license": "UNLICENSED",
@@ -37,7 +39,7 @@
     "@adonisjs/prettier-config": "^1.4.0",
     "@adonisjs/tsconfig": "^1.4.0",
     "@japa/api-client": "^2.0.3",
-    "@japa/assert": "^3.0.0",
+    "@japa/assert": "^1.2.4",
     "@japa/plugin-adonisjs": "^3.0.1",
     "@japa/runner": "^3.1.4",
     "@swc/core": "1.7.26",
@@ -51,9 +53,10 @@
     "typescript": "~5.6"
   },
   "dependencies": {
-    "@adonisjs/auth": "^9.2.3",
+    "@adonisjs/auth": "^9.2.4",
     "@adonisjs/core": "^6.14.1",
     "@adonisjs/cors": "^2.2.1",
+    "@adonisjs/hash": "^9.0.5",
     "@adonisjs/lucid": "^21.3.0",
     "@vinejs/vine": "^2.1.0",
     "luxon": "^3.5.0",

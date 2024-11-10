@@ -1,7 +1,10 @@
 {
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
   "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "./build"
+    "rootDir": "../",
+    "outDir": "./build",
+    "paths": {
+      "frontend/*": ["./frontend/*"],
+    },
   }
 }
