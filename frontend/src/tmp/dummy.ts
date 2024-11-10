@@ -1,4 +1,4 @@
-import { ChannelInfo, ChannelPrivacy, ChannelRole } from '@/utils/types/channel'
+import { ChannelData, ChannelPrivacy, ChannelRole } from '@/utils/types/channel'
 import { User, UserStatus } from '@/utils/types/user'
 
 const usersTest: User[] = [
@@ -67,7 +67,7 @@ const usersTest: User[] = [
   },
 ]
 
-const channelsTest: ChannelInfo[] = [
+const channelsTest: ChannelData[] = [
   {
     id: 1,
     name: 'General',
@@ -91,6 +91,29 @@ const channelsTest: ChannelInfo[] = [
         joinedAt: '2024-10-19T12:00:00',
       },
     ],
+    messages: [
+      {
+        messageID: 1,
+        content: 'Hello, World!',
+        timestamp: '2024-11-07T02:15:28',
+        senderID: 1,
+        channelID: 1,
+      },
+      {
+        messageID: 2,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T02:15:35',
+        senderID: 3,
+        channelID: 1,
+      },
+      {
+        messageID: 3,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T03:40:00',
+        senderID: 4,
+        channelID: 1,
+      },
+    ],
   },
   {
     id: 2,
@@ -102,12 +125,28 @@ const channelsTest: ChannelInfo[] = [
       {
         userId: 1,
         role: ChannelRole.ADMIN,
-        joinedAt: '2024-10-19T12:00:00',
+        joinedAt: '2024-10-08T12:00:00',
       },
       {
         userId: 5,
         role: ChannelRole.MEMBER,
-        joinedAt: '2024-10-19T12:00:00',
+        joinedAt: '2024-10-08T12:00:00',
+      },
+    ],
+    messages: [
+      {
+        messageID: 4,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T02:15:28',
+        senderID: 1,
+        channelID: 2,
+      },
+      {
+        messageID: 5,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T02:15:35',
+        senderID: 5,
+        channelID: 2,
       },
     ],
   },
@@ -121,7 +160,7 @@ const channelsTest: ChannelInfo[] = [
       {
         userId: 3,
         role: ChannelRole.ADMIN,
-        joinedAt: '2024-10-19T12:00:00',
+        joinedAt: '2024-11',
       },
       {
         userId: 1,
@@ -142,6 +181,29 @@ const channelsTest: ChannelInfo[] = [
         userId: 6,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+      },
+    ],
+    messages: [
+      {
+        messageID: 6,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T03:08:27',
+        senderID: 3,
+        channelID: 3,
+      },
+      {
+        messageID: 7,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T03:25:56',
+        senderID: 1,
+        channelID: 3,
+      },
+      {
+        messageID: 8,
+        content: 'Hello, World!',
+        timestamp: '2024-11-09T03:46:00',
+        senderID: 4,
+        channelID: 3,
       },
     ],
   },
