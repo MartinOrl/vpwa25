@@ -83,7 +83,15 @@ const processedContent = computed(() => {
     })
   }
 
-  console.log(rawContent)
+  const links = rawContent.match(/https?:\/\/[^\s]+/g)
+  if (links) {
+    links.forEach((link) => {
+      rawContent = rawContent.replace(
+        link,
+        `<a href="${link}" target="_blank" style="color: ${palette.link}">${link}</a>`,
+      )
+    })
+  }
 
   return rawContent
 })
