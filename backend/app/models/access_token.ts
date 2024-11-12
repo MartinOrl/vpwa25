@@ -7,17 +7,17 @@ export default class AccessToken extends BaseModel {
 
 
   @column()
-  public userId!: number
+  declare userId: number
 
   @column()
-  public token!: string
+  declare token: string
 
   @column()
-  public type!: string
+  declare type: string
 
   @column.dateTime({ autoCreate: true })
-  public createdAt!: DateTime
+  declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
-  public updatedAt!: DateTime
+  declare updatedAt: DateTime
 }

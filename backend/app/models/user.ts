@@ -1,32 +1,42 @@
 import { DbAccessTokensProvider } from "@adonisjs/auth/access_tokens"
 import hash from "@adonisjs/core/services/hash"
-import { BaseModel, column, beforeSave } from '@adonisjs/lucid/orm'
+import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, beforeSave,manyToMany } from '@adonisjs/lucid/orm'
 import { UserStatus } from "frontend/src/utils/types/user.js"
+import Channel from "#models/channel"
 
 export default class User extends BaseModel{
+protected tableName = 'users'
+
   @column({ isPrimary: true, columnName: 'userID' })
   declare id: number
 
   @column()
-  public email!: string
+  declare email: string
 
   @column({columnName: 'firstName'})
-  public firstName!: string
+  declare firstName: string
 
   @column({columnName: 'lastName'})
-  public lastName!: string
+  declare lastName: string
 
   @column({columnName: 'nickName'})
-  public nickName!:string
+  declare nickName:string
 
   @column({ serializeAs: null })
-  public password!: string
+  declare password: string
 
   @column()
-  public profilePicture?: string
+  declare profilePicture?: string
 
   @column()
-  public status!: typeof UserStatus
+  declare status: typeof UserStatus
+
+  @manyToMany(() => Channel, {
+    pivotTable: 'channel_user',  // The name of the pivot table
+    pivotTimestamps: true,       // Automatically manage timestamps in pivot table if needed
+  })
+  declare channels: ManyToMany<typeof Channel>
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     expiresIn: '30 days',
