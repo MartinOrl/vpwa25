@@ -8,11 +8,13 @@ p {
   width: 100%;
 }
 
-.q-menu-notop {
-  top: unset !important;
+@media screen and (min-width: 786px) {
+  .hidden-md {
+    display: none !important;
+  }
 }
 
-@media (max-width: 786px) {
+@media screen and (max-width: 786px) {
   .channelList {
     display: none;
   }
