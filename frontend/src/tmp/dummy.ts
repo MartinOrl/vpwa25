@@ -71,7 +71,6 @@ const channelsTest: ChannelData[] = [
   {
     id: 1,
     name: 'General',
-    admin: 'admin',
     slug: 'general',
     privacy: ChannelPrivacy.PUBLIC,
     members: [
@@ -118,7 +117,6 @@ const channelsTest: ChannelData[] = [
   {
     id: 2,
     name: 'Private',
-    admin: 'admin',
     slug: 'private',
     privacy: ChannelPrivacy.PRIVATE,
     members: [
@@ -153,7 +151,6 @@ const channelsTest: ChannelData[] = [
   {
     id: 3,
     name: 'Secret',
-    admin: 'admin',
     slug: 'secret',
     privacy: ChannelPrivacy.PUBLIC,
     members: [

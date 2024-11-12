@@ -16,12 +16,23 @@ type ChannelMessage = {
   channelID: number
 }
 
+type Notification = {
+  id: number
+  message: string
+  timestamp: string
+}
+
+type ChannelMetadata = {
+  channelId: number
+  notifications: Notification[]
+  isInvitation: boolean
+}
+
 type ChannelInfo = {
   id: number
   name: string
   privacy: ChannelPrivacy
   slug: string
-  admin: string
   members: ChannelMember[]
 }
 
@@ -47,4 +58,5 @@ export {
   ChannelRole,
   ChannelData,
   ChannelMessage,
+  ChannelMetadata,
 }
