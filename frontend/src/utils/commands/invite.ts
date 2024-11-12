@@ -22,13 +22,30 @@ const inviteToChannelCommand: Command = {
     console.log('Invite user to channel', args)
     const user = args[0].slice(1)
 
-    const { addChannelMember, activeChannel } = useChannelStore()
+    const {
+      addChannelMember,
+      getActiveChannel,
+      updateChannelMetadata,
+      getChannelMetadata,
+    } = useChannelStore()
 
     const userId = usersTest.find((u) => u.nickName === user)?.id
 
     if (!userId) {
       return
     }
+
+    const activeChannel = getActiveChannel()
+
+    const existingChannelMetadata = getChannelMetadata(
+      activeChannel?.id as number,
+    )
+
+    updateChannelMetadata(activeChannel?.id as number, {
+      channelId: activeChannel?.id as number,
+      isInvitation: true,
+      notifications: existingChannelMetadata?.notifications || [],
+    })
 
     addChannelMember(activeChannel?.id || 0, userId || 0)
   },

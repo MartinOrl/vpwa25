@@ -22,6 +22,8 @@ enum Events {
   ListChannelMembers = 'list_channel_members',
   RequestSendMessage = 'request_send_message',
   SendMessage = 'send_message',
+  Typing = 'typing',
+  TypingStop = 'typing_stop',
 }
 
 export { Command, EventType, Event, Events }

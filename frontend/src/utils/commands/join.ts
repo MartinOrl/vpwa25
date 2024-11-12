@@ -42,7 +42,6 @@ const joinChannelCommand: Command = {
       name: args[0],
       privacy: privacy,
       slug: args[0].toLowerCase().replace(' ', '-'),
-      admin: 'admin',
       members: [
         {
           userId: user?.id || 0,
