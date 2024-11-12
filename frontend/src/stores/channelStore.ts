@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import {
+  ChannelMetadata,
   ChannelRole,
   type ChannelData,
   type ChannelInfo,
@@ -11,7 +12,8 @@ export const useChannelStore = defineStore('channel', {
   state: () => ({
     channels: [] as ChannelData[] | null,
     activeChannel: null as ChannelData | null,
-    history: [] as number[], // history is based on ids
+    history: [] as number[],
+    metadata: [] as ChannelMetadata[],
   }),
 
   actions: {
@@ -24,6 +26,19 @@ export const useChannelStore = defineStore('channel', {
     },
     getActiveChannel() {
       return this.activeChannel
+    },
+    updateChannelMetadata(channelId: number, metadata: ChannelMetadata) {
+      console.log('metadata', metadata)
+      console.log('channelId', channelId)
+      const index = this.metadata.findIndex((m) => m.channelId === channelId)
+      if (index >= 0) {
+        this.metadata[index] = metadata
+      } else {
+        this.metadata.push(metadata)
+      }
+    },
+    getChannelMetadata(channelId: number) {
+      return this.metadata.find((m) => m.channelId === channelId) || null
     },
     getChannels() {
       return this.channels
@@ -76,6 +91,8 @@ export const useChannelStore = defineStore('channel', {
         timestamp: new Date().toISOString(),
         senderID: user?.id || 0,
       }
+
+      console.log('messageObj', messageObj)
 
       this.activeChannel?.messages.push(messageObj)
     },

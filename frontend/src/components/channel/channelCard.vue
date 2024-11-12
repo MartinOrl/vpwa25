@@ -11,10 +11,21 @@
       <p :style="channelInfoStyles">
         {{ $props.channel.name }}
       </p>
-      <div :style="channelNotifyWrapperStyles">
-        <p :style="channelNotifyCountStyles">9+</p>
+      <q-icon
+        v-if="isUserInvited"
+        name="email"
+        :style="{
+          color: palette.textOnPrimary,
+          fontSize: '1rem',
+          marginRight: spacing(0.5),
+        }"
+      />
+      <div v-if="hasNotifications" :style="channelNotifyWrapperStyles">
+        <p :style="channelNotifyCountStyles">
+          {{ notificationsCount > 9 ? '9+' : notificationsCount }}
+        </p>
       </div>
-      <div onclick="channelOptionsMenu = !channelOptionsMenu">
+      <div @click.stop="channelOptionsMenu = !channelOptionsMenu">
         <q-icon
           name="more_vert"
           :style="{
@@ -65,11 +76,15 @@ import { computed, defineComponent, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import { spacing, palette } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
+import { ChannelData, ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
 
-const { getActiveChannel, setActiveChannel } = useChannelStore()
+const channelStore = useChannelStore()
+const { getActiveChannel, setActiveChannel } = channelStore
 
 const channelOptionsMenu = ref(false)
+const hasNotifications = ref(false)
+const isUserInvited = ref(false)
+const notificationsCount = ref(0)
 
 const channelOptions = [
   {
@@ -91,7 +106,7 @@ const channelOptions = [
 ]
 
 const props = defineProps<{
-  channel: ChannelInfo
+  channel: ChannelData
 }>()
 
 const isNotification = false
@@ -104,6 +119,16 @@ const isChannelActive = computed(() => {
 const selectChannel = () => {
   setActiveChannel(props.channel)
 }
+
+channelStore.$subscribe(() => {
+  const channelMetadata = channelStore.getChannelMetadata(
+    props.channel?.id as number,
+  )
+  hasNotifications.value =
+    Boolean(channelMetadata?.notifications.length) || false
+  notificationsCount.value = channelMetadata?.notifications.length || 0
+  isUserInvited.value = channelMetadata?.isInvitation || false
+})
 
 const channelCardStyles = computed<CSSProperties>(() => ({
   padding: `${spacing(2)} ${spacing(5)}`,
@@ -154,7 +179,7 @@ const channelIconStyles = computed<CSSProperties>(() => ({
 const channelContainerStyles = computed<CSSProperties>(() => ({
   display: 'flex',
   flexDirection: 'row',
-  gap: spacing(3),
+  gap: spacing(1),
   alignItems: 'center',
   width: '100%',
 }))

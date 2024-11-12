@@ -119,7 +119,13 @@ import { User } from '@/utils/types/user'
 
 const commandStore = useCommandStore()
 const { setActiveCommand, callEvent } = commandStore
-const { getChannels, processSendMessage, activeChannel } = useChannelStore()
+const {
+  getChannels,
+  processSendMessage,
+  activeChannel,
+  updateChannelMetadata,
+  getChannelMetadata,
+} = useChannelStore()
 const { user } = useAuthStore()
 
 const commandInput = ref('')
@@ -248,6 +254,7 @@ commandStore.$subscribe(() => {
 })
 
 const processSend = () => {
+  if (commandInput.value === '') return
   const _inputParts = commandInput.value.split(' ')
   const command = _inputParts[0]
   if (command.startsWith('/')) {
@@ -257,6 +264,32 @@ const processSend = () => {
       type: Events.SendMessage,
       data: commandInput.value,
     })
+    const channelMetadata = getChannelMetadata(activeChannel?.id as number)
+    if (channelMetadata) {
+      updateChannelMetadata(activeChannel?.id as number, {
+        ...channelMetadata,
+        notifications: [
+          ...channelMetadata.notifications,
+          {
+            id: channelMetadata.notifications.length + 1,
+            message: commandInput.value,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      })
+    } else {
+      updateChannelMetadata(activeChannel?.id as number, {
+        channelId: activeChannel?.id as number,
+        isInvitation: false,
+        notifications: [
+          {
+            id: 1,
+            message: commandInput.value,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      })
+    }
   }
 }
 
@@ -287,6 +320,9 @@ const processCommand = () => {
 
 const clearInput = async () => {
   commandInput.value = ''
+  callEvent({
+    type: Events.TypingStop,
+  })
   await nextTick()
   getMenuDisplay()
 }
@@ -301,7 +337,6 @@ const promptStyle = computed<CSSProperties>(() => ({
   background: palette.background,
   padding: '0',
   borderRadius: spacing(2),
-  cursor: 'pointer',
   alignItems: 'start',
   position: 'relative',
   overflow: 'hidden',
@@ -309,6 +344,7 @@ const promptStyle = computed<CSSProperties>(() => ({
   border: `1px solid ${palette.border}`,
   color: palette.textOpaque,
   flexGrow: 1,
+  zIndex: 2,
 }))
 
 const onInput = (event: Event) => {
@@ -317,6 +353,10 @@ const onInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   commandInput.value = target.value
   getMenuDisplay()
+  callEvent<string>({
+    type: Events.Typing,
+    data: commandInput.value,
+  })
 }
 
 const menuStyles = computed<CSSProperties>(() => ({
