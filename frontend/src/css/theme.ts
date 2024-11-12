@@ -6,6 +6,7 @@ export const palette = {
   accent: '#9c27b0',
   mention: '#FF8000',
   mentionBackground: 'rgba(255, 128, 0, 0.1)',
+  link: '#00BCD4',
   background: '#1f1f1f',
   textOnPrimary: '#e0e0e0',
   error: '#ff0033',
