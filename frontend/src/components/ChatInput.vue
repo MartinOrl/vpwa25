@@ -38,7 +38,7 @@
           }"
         >
           <q-icon name="typing" />
-          <p>Jane is typing</p>
+          <p>{{ userTyping.name }} is typing</p>
         </div>
         <div>
           <p
@@ -52,7 +52,7 @@
               opacity: showTyping ? 1 : 0,
             }"
           >
-            {{ userTyping }}
+            {{ userTyping.message }}
           </p>
         </div>
       </div>
@@ -73,7 +73,10 @@ const commandStore = useCommandStore()
 const { callEvent } = commandStore
 
 const isUserTyping = ref(false)
-const userTyping = ref('')
+const userTyping = ref({
+  name: '',
+  message: '',
+})
 const showTyping = ref(false)
 
 // watch for typing event, if 5 seconds pass without a typing event, set isUserTyping to false
@@ -93,14 +96,20 @@ commandStore.$subscribe(() => {
   const { event } = commandStore
   if (event?.type === Events.Typing && event.data) {
     isUserTyping.value = true
-    userTyping.value = event.data as string
+    userTyping.value = event.data as {
+      name: string
+      message: string
+    }
   } else if (
     event?.type === Events.TypingStop ||
     (event?.type === Events.Typing && !event.data) ||
     event?.type === Events.SendMessage
   ) {
     isUserTyping.value = false
-    userTyping.value = ''
+    userTyping.value = {
+      name: '',
+      message: '',
+    }
   }
 })
 

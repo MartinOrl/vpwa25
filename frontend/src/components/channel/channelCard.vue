@@ -61,7 +61,7 @@
             padding: '0',
           }"
         >
-          <q-item-section :style="channelOptionStyles">
+          <q-item-section :style="channelOptionStyles" @click="channel.action">
             <q-icon :name="channel.icon" />
             <p>{{ channel.label }}</p>
           </q-item-section>
@@ -75,9 +75,18 @@
 import { computed, defineComponent, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import { spacing, palette } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelData, ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
+import cancelChannelSubCommand from '@/utils/commands/cancel'
+import quitChannelCommand from '@/utils/commands/quit'
+import {
+  ChannelData,
+  ChannelInfo,
+  ChannelPrivacy,
+  ChannelRole,
+} from '@/utils/types/channel'
 
+const { user } = useAuthStore()
 const channelStore = useChannelStore()
 const { getActiveChannel, setActiveChannel } = channelStore
 
@@ -86,28 +95,38 @@ const hasNotifications = ref(false)
 const isUserInvited = ref(false)
 const notificationsCount = ref(0)
 
-const channelOptions = [
-  {
-    id: 'leave_channel',
-    label: 'Leave Channel',
-    icon: 'exit_to_app',
-    action: () => {
-      console.log('Leave Channel')
-    },
-  },
-  {
-    id: 'close_channel',
-    label: 'Close Channel',
-    icon: 'close',
-    action: () => {
-      console.log('Close Channel')
-    },
-  },
-]
-
 const props = defineProps<{
   channel: ChannelData
 }>()
+
+const memberData = computed(() =>
+  props.channel.members.find((member) => member.userId === user?.id),
+)
+
+const channelOptions = computed(() => {
+  const options = []
+  options.push({
+    id: 'leave_channel',
+    label: 'Leave Channel',
+    icon: 'exit_to_app',
+    roleRequired: [ChannelRole.MEMBER, ChannelRole.ADMIN],
+    action: () => {
+      cancelChannelSubCommand.run(props.channel.id)
+    },
+  })
+  if (memberData.value?.role === ChannelRole.ADMIN) {
+    options.push({
+      id: 'close_channel',
+      label: 'Close Channel',
+      icon: 'close',
+      roleRequired: [ChannelRole.ADMIN],
+      action: () => {
+        quitChannelCommand.run(props.channel.id)
+      },
+    })
+  }
+  return options
+})
 
 const isNotification = false
 
@@ -139,6 +158,7 @@ const channelCardStyles = computed<CSSProperties>(() => ({
   cursor: 'pointer',
   width: '100%',
   background: isNotification ? palette.backgroundWhiteOpaque : 'transparent',
+  order: isUserInvited.value ? 0 : 1,
 }))
 
 const channelNotifyCountStyles = computed<CSSProperties>(() => ({

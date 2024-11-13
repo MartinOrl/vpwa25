@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import {
   ChannelMetadata,
+  ChannelPrivacy,
   ChannelRole,
   type ChannelData,
   type ChannelInfo,
@@ -37,8 +38,61 @@ export const useChannelStore = defineStore('channel', {
         this.metadata.push(metadata)
       }
     },
+
+    updateUserKickCount(channelId: number, userId: number) {
+      const channel = this.getChannelById(channelId)
+      if (!channel) return
+      const member = channel.members.find((m) => m.userId === userId)
+      if (!member) return
+
+      if (member.kickCount === 3) return
+      member.kickCount += 1
+      if (member.kickCount === 3) {
+        member.role = ChannelRole.KICKED
+      }
+    },
+    forceKickUser(channelId: number, userId: number) {
+      const channel = this.getChannelById(channelId)
+      if (!channel) return
+      const member = channel.members.find((m) => m.userId === userId)
+      if (!member) return
+
+      member.role = ChannelRole.KICKED
+    },
+    restoreUser(channelId: number, userId: number) {
+      const channel = this.getChannelById(channelId)
+      if (!channel) return
+      const member = channel.members.find((m) => m.userId === userId)
+      if (!member) return
+
+      member.role = ChannelRole.MEMBER
+      member.kickCount = 0
+    },
+
+    matchChannel(channelName: string, privacy: ChannelPrivacy) {
+      return this.channels?.find(
+        (c: ChannelData) => c.name === channelName && c.privacy === privacy,
+      )
+    },
     getChannelMetadata(channelId: number) {
       return this.metadata.find((m) => m.channelId === channelId) || null
+    },
+    isChannelAdmin(channelId?: number) {
+      const { user } = useAuthStore()
+      const channel = channelId
+        ? this.getChannelById(channelId)
+        : this.activeChannel
+      if (!channel || !user) return false
+      const member = channel.members.find((m) => m.userId === user.id)
+      return member?.role === ChannelRole.ADMIN
+    },
+    isChannelMember(channelId?: number) {
+      const { user } = useAuthStore()
+      const channel = channelId
+        ? this.getChannelById(channelId)
+        : this.activeChannel
+      if (!channel || !user) return false
+      return channel.members.some((m) => m.userId === user.id)
     },
     getChannels() {
       return this.channels
@@ -55,6 +109,12 @@ export const useChannelStore = defineStore('channel', {
     addChannel(channel: ChannelData) {
       this.channels?.push(channel)
       this.setActiveChannel(channel)
+    },
+
+    getUserChannels(userId: number) {
+      return this.channels?.filter((c: ChannelInfo) =>
+        c.members.some((m) => m.userId === userId),
+      )
     },
 
     removeChannelMember(channelId: number, userId: number) {
@@ -76,9 +136,15 @@ export const useChannelStore = defineStore('channel', {
             userId,
             role: ChannelRole.MEMBER,
             joinedAt: new Date().toISOString(),
+            kickCount: 0,
           })
         }
       }
+    },
+
+    sendCustomMessage(channelId: number, message: ChannelMessage) {
+      const channel = this.getChannelById(channelId)
+      channel?.messages.push(message)
     },
 
     processSendMessage(message: string) {
@@ -98,6 +164,7 @@ export const useChannelStore = defineStore('channel', {
     },
 
     removeChannel(channelId: number) {
+      console.log('removeChannel', channelId)
       this.channels =
         this.channels?.filter((c: ChannelInfo) => c.id !== channelId) || null
 

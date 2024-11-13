@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { channelsTest } from '@/tmp/dummy'
+import { channelsTest, usersTest } from '@/tmp/dummy'
+import { initiateConnection } from '@/utils/socket'
 import { User, UserStatus } from '@/utils/types/user'
 import { useChannelStore } from './channelStore'
 
@@ -21,8 +22,10 @@ export const useAuthStore = defineStore('auth', {
     login(user: User, token: string) {
       this.user = user
       this.token = token
+      initiateConnection(1)
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
+      usersTest.push(user)
     },
     logout() {
       this.user = null

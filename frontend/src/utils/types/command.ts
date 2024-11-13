@@ -1,8 +1,14 @@
 import { CommandAllowRule } from './misc'
 
+enum MatchUsersList {
+  OTHERS = 'others',
+  MEMBERS = 'members',
+}
+
 type Command = {
   command: string
   shadow: string
+  usersMatch?: MatchUsersList
   args: string[]
   description: string
   example: string
@@ -26,4 +32,4 @@ enum Events {
   TypingStop = 'typing_stop',
 }
 
-export { Command, EventType, Event, Events }
+export { Command, EventType, Event, Events, MatchUsersList }

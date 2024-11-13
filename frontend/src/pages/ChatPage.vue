@@ -19,6 +19,18 @@
       id="chat-overflow"
     >
       <div
+        v-if="isNoChannelSelected"
+        :style="{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          color: palette.textOpaque,
+        }"
+      >
+        <p>No channel selected. Please select a channel to start chatting.</p>
+      </div>
+      <div
         class="chat-container"
         :style="{
           backgroundColor: palette.background,
@@ -31,6 +43,7 @@
           justifyContent: 'flex-end',
           marginTop: 'auto',
         }"
+        v-if="!isNoChannelSelected"
       >
         <div
           v-for="(msg, index) in messages"
@@ -55,13 +68,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUpdated } from 'vue'
+import { computed, nextTick, onUpdated, ref } from 'vue'
 import ChannelMessage from '@/components/channel/channelMessage.vue'
 import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
 import ChatInput from '@/components/ChatInput.vue'
 import { palette, spacing } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 const channelStore = useChannelStore()
+const { user } = useAuthStore()
+
+const isNoChannelSelected = ref(
+  (channelStore.getUserChannels(user?.id as number) ?? []).length === 0,
+)
+
+channelStore.$subscribe(() => {
+  const userChannels = channelStore.getUserChannels(user?.id as number) ?? []
+
+  if (userChannels?.length > 0) {
+    isNoChannelSelected.value = false
+  } else {
+    isNoChannelSelected.value = true
+  }
+  console.log('isNoChannelSelected', isNoChannelSelected.value)
+})
 
 const messages = computed(() => {
   return channelStore.getChannelMessages()

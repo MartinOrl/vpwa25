@@ -1,5 +1,5 @@
 <template>
-  <div :style="channelHeaderContainerStyles">
+  <div :style="channelHeaderContainerStyles" v-if="!isNoChannelSelected">
     <div
       :style="{
         display: 'flex',
@@ -28,14 +28,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import ChannelMembers from '@/components/channel/channelMembers.vue'
 import { palette, spacing } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
 
-const { getActiveChannel } = useChannelStore()
+const channelStore = useChannelStore()
+const { user } = useAuthStore()
+
+const { getActiveChannel, getUserChannels } = channelStore
+
+const isNoChannelSelected = ref(
+  (getUserChannels(user?.id as number) ?? []).length === 0,
+)
+
+channelStore.$subscribe(() => {
+  if ((getUserChannels(user?.id as number) ?? [])?.length > 0) {
+    isNoChannelSelected.value = false
+  } else {
+    isNoChannelSelected.value = true
+  }
+})
 
 const activeChannel = computed(() => getActiveChannel() as ChannelInfo)
 
