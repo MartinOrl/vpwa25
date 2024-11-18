@@ -6,7 +6,7 @@ export default class extends BaseSchema {
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')  // Primary key
-      table.integer('user_id').unsigned().references('userID').inTable('users').onDelete('CASCADE')  // Foreign key to users table
+      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')  // Foreign key to users table
       table.integer('channel_id').unsigned().references('id').inTable('channels').onDelete('CASCADE')  // Foreign key to channels table
       table.timestamp('joined_at', { useTz: true }).defaultTo(this.now())  // Optional: Track when the user joined the channel
     })

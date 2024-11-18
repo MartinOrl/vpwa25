@@ -2,22 +2,21 @@ import { DateTime } from 'luxon'
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 
 export default class AccessToken extends BaseModel {
-  @column({ isPrimary: true })
+  @column({ isPrimary: true, columnName: 'id' })
   declare id: number
 
-
-  @column()
+  @column({columnName: 'user_id'})
   declare userId: number
 
-  @column()
+  @column({columnName: 'token'})
   declare token: string
 
-  @column()
+  @column({columnName: 'type'})
   declare type: string
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'expires_at' })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime
 }

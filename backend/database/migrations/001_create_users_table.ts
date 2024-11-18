@@ -5,7 +5,7 @@ export default class extends BaseSchema {
 
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('userID')  // Equivalent to SERIAL, auto-incrementing primary key
+      table.increments('id')  // Equivalent to SERIAL, auto-incrementing primary key
       table.string('firstName').notNullable()  // firstName column
       table.string('lastName').notNullable()   // lastName column
       table.string('nickName').unique().notNullable()  // nickName column, unique
