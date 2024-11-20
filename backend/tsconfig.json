@@ -1,10 +1,12 @@
 {
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "rootDir": "../",
     "outDir": "./build",
     "paths": {
-      "frontend/*": ["./frontend/*"],
-    },
+      "frontend/*": ["./frontend/*"]
+    }
   }
 }

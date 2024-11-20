@@ -6,6 +6,7 @@ enum ChannelPrivacy {
 enum ChannelRole {
   ADMIN = 'ADMIN',
   MEMBER = 'MEMBER',
+  KICKED = 'KICKED',
 }
 
 type ChannelInfo = {
