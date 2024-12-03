@@ -1,25 +1,30 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
-export default class extends BaseSchema {
+export default class AuthAccessTokens extends BaseSchema {
   protected tableName = 'access_tokens'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
-      table.string('abilities').nullable()
-      table.string('hash').nullable()
-      table.string('last_used_at').nullable()
+      table
+        .integer('tokenable_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
+      table.string('type').notNullable()
       table.string('name').nullable()
-      table.string('tokenable_id').nullable()
-      table.string('type').nullable()
-      table.string('token', 64).nullable().unique()
-      table.timestamp('expires_at').nullable()
-      table.timestamps(true)
+      table.string('hash').notNullable()
+      table.text('abilities').notNullable()
+      table.timestamp('created_at', { useTz: true }).notNullable()
+      table.timestamp('updated_at', { useTz: true }).notNullable()
+      table.timestamp('last_used_at', { useTz: true }).nullable()
+      table.timestamp('expires_at', { useTz: true }).nullable()
     })
   }
 
-  async down() {
-    this.schema.dropTable(this.tableName)
+  public async down() {
+    this.schema.dropTableIfExists(this.tableName)
   }
 }

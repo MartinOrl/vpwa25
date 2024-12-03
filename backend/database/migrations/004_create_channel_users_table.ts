@@ -13,12 +13,12 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('channels')
         .onDelete('CASCADE') // Foreign key to channels table
-      table.enum('role', ['ADMIN', 'MEMBER', 'KICKED']).notNullable().defaultTo('MEMBER') // Role of the user in the channel
+      table.enum('role', ['ADMIN', 'MEMBER']).notNullable().defaultTo('MEMBER') // Role of the user in the channel
       table.timestamp('joined_at', { useTz: true }).defaultTo(this.now()) // Optional: Track when the user joined the channel
     })
   }
 
   async down() {
-    this.schema.dropTable(this.tableName)
+    this.schema.dropTableIfExists(this.tableName)
   }
 }

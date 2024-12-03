@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, manyToMany, afterCreate } from '@adonisjs/lucid/orm'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Message from '#models/message'
@@ -16,8 +16,8 @@ export default class Channel extends BaseModel {
   @column({ columnName: 'owner_id' })
   declare ownerId: number
 
-  @column({ columnName: 'type' })
-  declare type: 'PUBLIC' | 'PRIVATE'
+  @column({ columnName: 'privacy' })
+  declare privacy: 'PUBLIC' | 'PRIVATE'
 
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
@@ -32,7 +32,8 @@ export default class Channel extends BaseModel {
 
   @manyToMany(() => User, {
     pivotTable: 'channel_users', // The name of the pivot table
-    pivotTimestamps: true, // Automatically manage timestamps in pivot table if needed
+    pivotTimestamps: false, // Automatically manage timestamps in pivot table if needed
+    pivotColumns: ['role'], // Additional columns in the pivot table
   })
   declare users: ManyToMany<typeof User>
 
@@ -40,7 +41,16 @@ export default class Channel extends BaseModel {
     pivotTable: 'channel_user_messages',
     pivotForeignKey: 'channel_id',
     pivotRelatedForeignKey: 'message_id',
-    pivotTimestamps: true,
+    pivotTimestamps: false,
   })
   declare messages: ManyToMany<typeof Message>
+
+  @afterCreate()
+  public static async addOwnerToChannel(channel: Channel) {
+    await channel.related('users').attach({
+      [channel.ownerId]: {
+        role: 'ADMIN',
+      },
+    })
+  }
 }

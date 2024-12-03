@@ -8,7 +8,6 @@ export default class extends BaseSchema {
       table.increments('id') // Primary key, similar to SERIAL in SQL
       table.text('content').notNullable() // Content of the message
       table.timestamp('timestamp', { useTz: true }).defaultTo(this.now()) // When the message was created
-      table.boolean('isHighlighted').defaultTo(false) // Optional: to highlight specific messages
 
       // Foreign keys
       table.integer('sender_id').unsigned().references('id').inTable('users').onDelete('CASCADE') // User who sent the message
@@ -22,6 +21,6 @@ export default class extends BaseSchema {
   }
 
   async down() {
-    this.schema.dropTable(this.tableName)
+    this.schema.dropTableIfExists(this.tableName)
   }
 }
