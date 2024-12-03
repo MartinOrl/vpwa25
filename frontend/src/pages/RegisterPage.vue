@@ -121,10 +121,13 @@ import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
+import { useChannelStore } from '@/stores/channelStore'
+import { usersTest } from '@/tmp/dummy'
 import { ValidationRule } from '@/utils/types/misc'
 import { UserStatus } from '@/utils/types/user'
 const router = useRouter()
 const { login } = useAuthStore()
+const { addChannelMember, sendCustomMessage } = useChannelStore()
 
 // Reactive state for input
 const form = reactive({
@@ -164,18 +167,32 @@ const getValidationRules = (value: string) => {
 }
 
 const handleRegister = () => {
+  const userMatch = usersTest.find(
+    (user) => user.email === form.email || user.nickName === form.nickName,
+  )
+
+  if (userMatch) return
+  const userID = 100 + Math.floor(Math.random() * 100)
   login(
     {
-      id: 1,
+      id: userID,
       email: form.email,
-      name: 'Joe',
-      nickName: 'Joe',
-      surname: 'Doe',
+      name: form.firstName,
+      nickName: form.nickName,
+      surname: form.lastName,
       status: UserStatus.ONLINE,
       image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
     },
     'forcelogin',
   )
+  addChannelMember(1, userID)
+  sendCustomMessage(1, {
+    content: `${form.firstName} ${form.lastName} has joined the channel`,
+    channelID: 1,
+    senderID: 0,
+    messageID: 1000 + Math.floor(Math.random() * 100),
+    timestamp: new Date().toISOString(),
+  })
   router.push('/chat')
 }
 

@@ -8,22 +8,25 @@
       display: 'block',
       borderRadius: spacing(2),
     }"
+    v-if="!isSystemMessage"
   />
   <div
     :style="{
-      width: '80%',
+      width: '100%',
     }"
   >
     <div
       :style="{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: isSystemMessage ? 'center' : 'flex-start',
       }"
     >
       <p
         :style="{
           fontWeight: 'bold',
         }"
+        v-if="!isSystemMessage"
       >
         {{ userData?.name }} {{ userData?.surname }}
       </p>
@@ -42,6 +45,11 @@
         marginTop: spacing(0.5),
         textWrap: 'wrap',
         wordBreak: 'break-word',
+        width: '80%',
+        opacity: isSystemMessage ? 0.5 : 1,
+        textAlign: isSystemMessage ? 'center' : 'left',
+        marginLeft: isSystemMessage ? 'auto' : '0',
+        marginRight: isSystemMessage ? 'auto' : '0',
       }"
       v-html="processedContent"
     ></p>
@@ -59,6 +67,10 @@ const props = defineProps<{
 }>()
 
 const timestampReadable = ref('')
+
+const isSystemMessage = computed(() => {
+  return props.message.senderID === 0
+})
 
 const allowedMentions = ['@here', '@everyone']
 

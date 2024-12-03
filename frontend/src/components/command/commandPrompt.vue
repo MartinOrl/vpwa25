@@ -112,8 +112,8 @@ import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { usersTest } from '@/tmp/dummy'
 import { getCommands } from '@/utils/commands'
-import { ChannelPrivacy, ChannelData } from '@/utils/types/channel'
-import { Events, type Command } from '@/utils/types/command'
+import { ChannelPrivacy, ChannelData, ChannelRole } from '@/utils/types/channel'
+import { Events, MatchUsersList, type Command } from '@/utils/types/command'
 import { CommandAllowRule } from '@/utils/types/misc'
 import { User } from '@/utils/types/user'
 
@@ -122,7 +122,7 @@ const { setActiveCommand, callEvent } = commandStore
 const {
   getChannels,
   processSendMessage,
-  activeChannel,
+  getActiveChannel,
   updateChannelMetadata,
   getChannelMetadata,
 } = useChannelStore()
@@ -190,15 +190,42 @@ const suggestions = computed(() => {
     const nickName = suggestionRequest.slice(1)
 
     const usersData = [...usersTest]
-    const membersIDs =
-      activeChannel?.members.map((member) => member.userId) || []
+    const memberIDRole =
+      getActiveChannel()?.members.map((member) => ({
+        id: member.userId,
+        role: member.role,
+      })) || []
 
-    return usersData.filter(
-      (member) =>
-        member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
-        member.id !== user?.id &&
-        !membersIDs.includes(member.id),
-    )
+    if (matchedCommand.value?.usersMatch) {
+      if (matchedCommand.value.usersMatch === MatchUsersList.MEMBERS) {
+        return usersData.filter(
+          (member) =>
+            member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
+            member.id !== user?.id &&
+            memberIDRole.find((m) => m.id === member.id) &&
+            memberIDRole.find((m) => m.id === member.id)?.role !==
+              ChannelRole.KICKED,
+        )
+      } else if (matchedCommand.value.usersMatch === MatchUsersList.OTHERS) {
+        return usersData.filter(
+          (member) =>
+            member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
+            member.id !== user?.id &&
+            (!memberIDRole.find((m) => m.id === member.id) ||
+              memberIDRole.find((m) => m.id === member.id)?.role ===
+                ChannelRole.KICKED),
+        )
+      }
+    } else {
+      return usersData.filter(
+        (member) =>
+          member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
+          member.id !== user?.id &&
+          memberIDRole.find((m) => m.id === member.id),
+      )
+    }
+
+    return usersData
   }
 
   return null
@@ -238,6 +265,12 @@ const getMenuDisplay = () => {
     } else {
       closeCommandsMenu()
     }
+
+    const lastKwarg = kwargs[kwargs.length - 1]
+    if (lastKwarg && lastKwarg.startsWith('@')) {
+      openSuggestionsMenu()
+    }
+
     setActiveCommand(null)
   }
 }
@@ -264,6 +297,7 @@ const processSend = () => {
       type: Events.SendMessage,
       data: commandInput.value,
     })
+    const activeChannel = getActiveChannel()
     const channelMetadata = getChannelMetadata(activeChannel?.id as number)
     if (channelMetadata) {
       updateChannelMetadata(activeChannel?.id as number, {
@@ -315,6 +349,9 @@ const processCommand = () => {
   clearInput()
   if (!commandValidated) return
 
+  callEvent({
+    type: Events.TypingStop,
+  })
   matchedCommand.value?.run(kwargs)
 }
 
@@ -353,9 +390,15 @@ const onInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   commandInput.value = target.value
   getMenuDisplay()
-  callEvent<string>({
+  callEvent<{
+    message: string
+    name: string
+  }>({
     type: Events.Typing,
-    data: commandInput.value,
+    data: {
+      message: commandInput.value,
+      name: user?.nickName as string,
+    },
   })
 }
 

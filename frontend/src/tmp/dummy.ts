@@ -76,18 +76,21 @@ const channelsTest: ChannelData[] = [
     members: [
       {
         userId: 1,
-        role: ChannelRole.ADMIN,
+        role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 3,
-        role: ChannelRole.MEMBER,
+        role: ChannelRole.ADMIN,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 4,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
     ],
     messages: [
@@ -124,11 +127,13 @@ const channelsTest: ChannelData[] = [
         userId: 1,
         role: ChannelRole.ADMIN,
         joinedAt: '2024-10-08T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 5,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-08T12:00:00',
+        kickCount: 0,
       },
     ],
     messages: [
@@ -158,26 +163,31 @@ const channelsTest: ChannelData[] = [
         userId: 3,
         role: ChannelRole.ADMIN,
         joinedAt: '2024-11',
+        kickCount: 0,
       },
       {
         userId: 1,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 4,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 5,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
       {
         userId: 6,
         role: ChannelRole.MEMBER,
         joinedAt: '2024-10-19T12:00:00',
+        kickCount: 0,
       },
     ],
     messages: [

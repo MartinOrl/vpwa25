@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelData, ChannelPrivacy, ChannelRole } from '../types/channel'
+import { ChannelPrivacy, ChannelRole } from '../types/channel'
 import type { Command } from '../types/command'
 import { CommandAllowRule } from '../types/misc'
 
@@ -11,7 +11,11 @@ const joinChannelCommand: Command = {
   description: 'Join or create a channel ',
   example: '/join general public',
   validate: (args: string[]) => {
-    const privacy = args[1].toUpperCase() || ChannelPrivacy.PUBLIC
+    const privacyArg = args[1]
+    const privacy =
+      privacyArg && privacyArg.toUpperCase() === ChannelPrivacy.PRIVATE
+        ? ChannelPrivacy.PRIVATE
+        : ChannelPrivacy.PUBLIC
 
     const channelName = args[0]
     if (
@@ -31,28 +35,76 @@ const joinChannelCommand: Command = {
   allows: (arg: CommandAllowRule) => joinChannelCommand.args.includes(arg),
   run: (args: string[]) => {
     console.log('Join channel', args)
-
-    const privacy =
-      (args[1].toUpperCase() as ChannelPrivacy) || ChannelPrivacy.PUBLIC
-
-    const { addChannel } = useChannelStore()
     const { user } = useAuthStore()
-    const channelObj: ChannelData = {
-      id: 100 + Math.floor(Math.random() * 1000),
-      name: args[0],
-      privacy: privacy,
-      slug: args[0].toLowerCase().replace(' ', '-'),
-      members: [
-        {
-          userId: user?.id || 0,
-          role: ChannelRole.ADMIN,
-          joinedAt: new Date().toISOString(),
-        },
-      ],
-      messages: [],
+    let channelName = args[0]
+    if (channelName.startsWith('#')) {
+      channelName = channelName.slice(1)
     }
+    const privacyArg = args[1]
+    const privacy =
+      privacyArg && privacyArg.toUpperCase() === ChannelPrivacy.PRIVATE
+        ? ChannelPrivacy.PRIVATE
+        : ChannelPrivacy.PUBLIC
 
-    addChannel(channelObj)
+    const {
+      matchChannel,
+      addChannel,
+      addChannelMember,
+      sendCustomMessage,
+      setActiveChannel,
+      isChannelMember,
+    } = useChannelStore()
+
+    const channel = matchChannel(channelName, privacy)
+
+    const channelsWithSameName =
+      matchChannel(channelName, ChannelPrivacy.PRIVATE) ||
+      matchChannel(channelName, ChannelPrivacy.PUBLIC)
+
+    if (channel) {
+      if (channel.privacy === ChannelPrivacy.PUBLIC) {
+        if (isChannelMember(channel.id)) {
+          return
+        }
+
+        addChannelMember(channel.id, user?.id as number)
+        sendCustomMessage(channel.id, {
+          channelID: channel.id,
+          senderID: 0,
+          content: `${user?.nickName} has joined the channel`,
+          timestamp: new Date().toISOString(),
+          messageID: 100 + Math.floor(Math.random() * 1000),
+        })
+        setActiveChannel(channel)
+      }
+    } else {
+      if (channelsWithSameName) {
+        return
+      }
+      const channelObj = {
+        id: 100 + Math.floor(Math.random() * 1000),
+        name: channelName,
+        privacy: privacy,
+        slug: channelName.toLowerCase().replace(' ', '-'),
+        members: [
+          {
+            userId: user?.id || 0,
+            role: ChannelRole.ADMIN,
+            joinedAt: new Date().toISOString(),
+            kickCount: 0,
+          },
+        ],
+        messages: [],
+      }
+      addChannel(channelObj)
+      sendCustomMessage(channelObj.id, {
+        channelID: channelObj.id,
+        senderID: 0,
+        content: `${user?.nickName} created the channel`,
+        timestamp: new Date().toISOString(),
+        messageID: 100 + Math.floor(Math.random() * 1000),
+      })
+    }
   },
 }
 

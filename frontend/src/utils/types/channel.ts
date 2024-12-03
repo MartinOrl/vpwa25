@@ -6,6 +6,7 @@ enum ChannelPrivacy {
 enum ChannelRole {
   ADMIN = 'ADMIN',
   MEMBER = 'MEMBER',
+  KICKED = 'KICKED',
 }
 
 type ChannelMessage = {
@@ -40,6 +41,7 @@ type ChannelMember = {
   userId: number
   role: ChannelRole
   joinedAt: string
+  kickCount: number
 }
 
 type Channel = ChannelInfo & {

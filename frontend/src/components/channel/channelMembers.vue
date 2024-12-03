@@ -212,7 +212,9 @@ const channelMembersInfo = computed(() => {
     return []
   }
 
-  const members = channelMatch.members
+  const members = channelMatch.members.filter(
+    (m) => m.role !== ChannelRole.KICKED,
+  )
 
   const memberInfo: MemberInfo[] = members.map((member) => {
     const memberMatch = usersTest.find((user) => user.id === member.userId)

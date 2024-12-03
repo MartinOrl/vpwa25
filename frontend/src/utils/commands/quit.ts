@@ -1,3 +1,4 @@
+import { useChannelStore } from '@/stores/channelStore'
 import type { Command } from '../types/command'
 
 const quitChannelCommand: Command = {
@@ -11,7 +12,19 @@ const quitChannelCommand: Command = {
   },
   allows: () => true,
   run: () => {
-    console.log('Close the channel')
+    const { getActiveChannel, isChannelAdmin, removeChannel } =
+      useChannelStore()
+
+    const activeChannel = getActiveChannel()
+
+    const isAdmin = isChannelAdmin(activeChannel?.id as number)
+
+    if (!isAdmin) {
+      console.log('You are not an admin of this channel')
+      return
+    }
+
+    removeChannel(activeChannel?.id as number)
   },
 }
 

@@ -86,6 +86,7 @@ import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
+import { usersTest } from '@/tmp/dummy'
 import { ValidationRule } from '@/utils/types/misc'
 import { UserStatus } from '@/utils/types/user'
 const router = useRouter()
@@ -118,18 +119,38 @@ const getValidationRules = (value: string) => {
 }
 
 const handleLogin = () => {
+  const match = usersTest.find((user) => user.email === form.email)
+
+  if (!match) {
+    console.log('User not found')
+    return
+  }
+
   login(
     {
-      id: 1,
+      id: match.id,
       email: form.email,
-      name: 'Joe',
-      nickName: 'Joe',
-      surname: 'Doe',
+      name: match.name,
+      nickName: match.nickName,
+      surname: match.surname,
       status: UserStatus.ONLINE,
-      image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
+      image: match.image,
     },
     'forcelogin',
   )
+
+  // login(
+  //   {
+  //     id: 1,
+  //     email: form.email,
+  //     name: 'Joe',
+  //     nickName: 'Joe',
+  //     surname: 'Doe',
+  //     status: UserStatus.ONLINE,
+  //     image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
+  //   },
+  //   'forcelogin',
+  // )
   router.push('/chat')
 }
 

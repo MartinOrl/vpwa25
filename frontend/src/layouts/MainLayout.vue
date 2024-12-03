@@ -90,7 +90,7 @@
                 clickable
                 v-close-popup
                 v-for="channel in channels"
-                :key="channel.name"
+                :key="channel.id"
                 :style="{
                   padding: '0',
                 }"
@@ -126,6 +126,7 @@ import ChannelCard from '@/components/channel/channelCard.vue'
 import ChannelHeader from '@/components/channel/channelHeader.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'
 import { containers, palette, spacing } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 
 const channelMenu = ref(false)
@@ -142,9 +143,15 @@ defineComponent({
   },
 })
 
-const { getChannels } = useChannelStore()
+const channelStore = useChannelStore()
+const { getUserChannels } = channelStore
+const { user } = useAuthStore()
 
-const channels = computed(() => getChannels())
+const channels = ref(getUserChannels(user?.id as number))
+
+channelStore.$subscribe(() => {
+  channels.value = getUserChannels(user?.id as number)
+})
 
 function toggleChannelMenu() {
   console.log('toggleChannelMenu')
@@ -184,5 +191,7 @@ const drawerStyles = computed<CSSProperties>(() => ({
   flex: '1',
   height: '100%',
   borderRight: `1px solid ${palette.border}`,
+  display: 'flex',
+  flexDirection: 'column',
 }))
 </script>
