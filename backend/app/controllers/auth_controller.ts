@@ -30,7 +30,7 @@ export default class AuthController {
         return response.unauthorized({ message: 'Invalid credentials' })
       }
       const token = await auth.use('api').authenticateAsClient(user)
-      return response.ok({ token })
+      return response.ok({ token, user })
     } catch (error) {
       console.error(error)
       return response.badRequest({ message: 'Login failed', error })

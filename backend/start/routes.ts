@@ -8,6 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import transmit from '@adonisjs/transmit/services/main'
 import { middleware } from './kernel.ts'
 
 router.get('/', async () => {
@@ -17,6 +18,8 @@ router.get('/', async () => {
 })
 
 // Auth routes
+transmit.registerRoutes()
+
 router
   .group(() => {
     router
@@ -33,6 +36,19 @@ router
       .prefix('/auth')
     router
       .group(() => {
+        router.post('/status', async (ctx) => {
+          const { default: UsersController } = await import('#controllers/users_controller')
+          return new UsersController().updateStatus(ctx)
+        })
+      })
+      .prefix('/user')
+      .use(
+        middleware.auth({
+          guards: ['api'],
+        })
+      )
+    router
+      .group(() => {
         router.get('/me', async (ctx) => {
           const { default: ChannelController } = await import('#controllers/channels_controller')
           return new ChannelController().listUserChannels(ctx)
@@ -45,9 +61,17 @@ router
           const { default: ChannelController } = await import('#controllers/channels_controller')
           return new ChannelController().destroy(ctx)
         })
+        router.get('/:name', async (ctx) => {
+          const { default: ChannelController } = await import('#controllers/channels_controller')
+          return new ChannelController().getChannel(ctx)
+        })
         router.post('/join', async (ctx) => {
           const { default: ChannelController } = await import('#controllers/channels_controller')
           return new ChannelController().join(ctx)
+        })
+        router.post('/:name/invite', async (ctx) => {
+          const { default: ChannelController } = await import('#controllers/channels_controller')
+          return new ChannelController().invite(ctx)
         })
         router.post('/:name/leave', async (ctx) => {
           const { default: ChannelController } = await import('#controllers/channels_controller')
@@ -65,8 +89,20 @@ router
           const { default: MessageController } = await import('#controllers/channels_controller')
           return new MessageController().getPaginatedMessages(ctx)
         })
+        router.post('/messages', async (ctx) => {
+          const { default: MessageController } = await import('#controllers/message_controller')
+          return new MessageController().sendMessage(ctx)
+        })
+        router.post('/typing/:channelId', async (ctx) => {
+          const { default: ChannelController } = await import('#controllers/channels_controller')
+          return new ChannelController().announceTyping(ctx)
+        })
       })
       .prefix('/channel')
-      .use(middleware.auth())
+      .use(
+        middleware.auth({
+          guards: ['api'],
+        })
+      )
   })
   .prefix('/api')
