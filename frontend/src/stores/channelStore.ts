@@ -15,6 +15,7 @@ export const useChannelStore = defineStore('channel', {
     activeChannel: null as ChannelData | null,
     history: [] as number[],
     metadata: [] as ChannelMetadata[],
+    users: [] as { id: number; name: string }[],
   }),
 
   actions: {
@@ -182,6 +183,12 @@ export const useChannelStore = defineStore('channel', {
         }
       }
     },
+
+    getUserNameById(userId: number): string {
+      const user = this.users.find((user) => user.id === userId)
+      return user?.name || `User ${userId}`
+    },
+
     isChannelSubscribed(id: number) {
       return this.channels?.some((c: ChannelInfo) => c.id === id) || false
     },

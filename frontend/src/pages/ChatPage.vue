@@ -68,7 +68,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUpdated, ref } from 'vue'
+import { Notify } from 'quasar'
+import { computed, nextTick, onUpdated, ref, watch } from 'vue'
 import ChannelMessage from '@/components/channel/channelMessage.vue'
 import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
 import ChatInput from '@/components/ChatInput.vue'
@@ -95,6 +96,31 @@ channelStore.$subscribe(() => {
 
 const messages = computed(() => {
   return channelStore.getChannelMessages()
+})
+
+watch(messages, (newMessages, oldMessages) => {
+  if (newMessages.length > oldMessages.length) {
+    const newMessage = newMessages[newMessages.length - 1]
+    if (newMessage.senderID !== user?.id) {
+      const senderName = channelStore.getUserNameById(newMessage.senderID)
+      Notify.create({
+        message: newMessage.content,
+        caption: `Od: ${senderName}`,
+        color: palette.primary,
+        textColor: palette.textOnPrimary,
+        position: 'top-right',
+        timeout: 5000,
+        actions: [
+          {
+            label: 'Open',
+            handler: () => {
+              console.log('MIKE OCKSMALL')
+            },
+          },
+        ],
+      })
+    }
+  }
 })
 
 onUpdated(async () => {
