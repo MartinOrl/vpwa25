@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const path = require('path')
+const ESLintPlugin = require('eslint-webpack-plugin')
 const { configure } = require('quasar/wrappers')
 
 module.exports = configure(function (ctx) {
@@ -84,7 +85,7 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-devServer
     devServer: {
       server: {
-        type: 'http',
+        type: 'https',
       },
       port: 8080,
       open: true, // opens browser window automatically
@@ -136,12 +137,37 @@ module.exports = configure(function (ctx) {
     // https://v2.quasar.dev/quasar-cli-webpack/developing-pwa/configuring-pwa
     pwa: {
       workboxPluginMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      workboxOptions: {}, // only for GenerateSW
+      workboxOptions: {
+        runtimeCaching: [
+          {
+            urlPattern: new RegExp('http://localhost:3000/api/'),
+            handler: 'NetworkFirst', // Cache-first or StaleWhileRevalidate for different behaviors
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 24 * 60 * 60, // 1 day
+              },
+              cacheableResponse: {
+                statuses: [0, 200], // Cache valid responses
+              },
+            },
+          },
+        ],
+      }, // only for GenerateSW
 
       // for the custom service worker ONLY (/src-pwa/custom-service-worker.[js|ts])
       // if using workbox in InjectManifest mode
       // chainWebpackCustomSW (/* chain */) {},
-
+      chainWebpackCustomSW(chain) {
+        chain
+          .plugin('eslint-webpack-plugin')
+          .use(ESLintPlugin, [{ extensions: ['js', 'vue', 'ts'] }])
+      },
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = false
+        cfg.clientsClaim = false
+      },
       manifest: {
         name: 'HuddleHub',
         short_name: 'Huddle',

@@ -169,7 +169,7 @@ const isTypingStyles = computed<CSSProperties>(() => ({
   gap: spacing(2),
   position: 'absolute',
   left: 0,
-  bottom: `${spacing(12.25)}`,
+  bottom: window.innerWidth < 768 ? '110px' : `${spacing(12.25)}`,
   width: '100%',
   padding: `${spacing(2)} ${spacing(3)}`,
   opacity: isUserTyping.value ? 1 : 0,

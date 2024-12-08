@@ -20,7 +20,7 @@
       </div>
 
       <div :style="mainContentStyles" class="break-md-col">
-        <q-list :style="drawerStyles" class="channelList">
+        <q-list :style="drawerStyles" class="channelList break-md-hide">
           <ChannelCard
             v-for="channel in channels"
             :key="channel.name"
@@ -179,8 +179,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, ref } from 'vue'
 import type { CSSProperties } from 'vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import { api } from '@/boot/axios'
 import ChannelCard from '@/components/channel/channelCard.vue'
 import ChannelHeader from '@/components/channel/channelHeader.vue'
@@ -215,18 +215,22 @@ const requestCreateChannel = async (privacy: string) => {
 }
 
 const channelStore = useChannelStore()
-const { getChannels } = channelStore
+const { getChannels, getActiveChannel } = channelStore
 
 const channels = ref(getChannels())
 
-console.log('Channels', channels.value)
+const _activeChannel = computed(() => getActiveChannel())
+
+watch(_activeChannel, () => {
+  channelMenu.value = false
+})
 
 channelStore.$subscribe(() => {
   channels.value = getChannels()
 })
 
 function toggleChannelMenu() {
-  console.log('toggleChannelMenu')
+  console.log('toggleChannelMenu', !channelMenu.value)
   channelMenu.value = !channelMenu.value
 }
 
@@ -257,14 +261,17 @@ const utilsStyles = computed<CSSProperties>(() => ({
   marginTop: spacing(3),
 }))
 
-const drawerStyles = computed<CSSProperties>(() => ({
-  maxWidth: containers.sidebar,
-  width: '100%',
-  border: 'none',
-  flex: '1',
-  height: '100%',
-  borderRight: `1px solid ${palette.border}`,
-  display: 'flex',
-  flexDirection: 'column',
-}))
+const drawerStyles = computed<CSSProperties>(() => {
+  const windowWidth = window.innerWidth
+  return {
+    maxWidth: windowWidth > 1280 ? containers.sidebar : 'none',
+    width: '100%',
+    border: 'none',
+    flex: '1',
+    height: '100%',
+    borderRight: `1px solid ${palette.border}`,
+    display: 'flex',
+    flexDirection: 'column',
+  }
+})
 </script>

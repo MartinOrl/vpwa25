@@ -383,6 +383,7 @@ const promptStyle = computed<CSSProperties>(() => ({
   color: palette.textOpaque,
   flexGrow: 1,
   zIndex: 2,
+  width: window.innerWidth < 768 ? '100%' : 'calc(100% - 300px)',
 }))
 
 const onInput = (event: Event) => {

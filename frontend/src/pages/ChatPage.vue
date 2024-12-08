@@ -3,6 +3,7 @@
     :style="{
       position: 'relative',
       height: '100%',
+      flexGrow: 1,
     }"
   >
     <div
