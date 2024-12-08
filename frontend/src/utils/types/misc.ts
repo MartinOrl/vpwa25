@@ -5,4 +5,14 @@ enum CommandAllowRule {
   CHANNEL = 'CHANNEL',
 }
 
-export { ValidationRule, CommandAllowRule }
+type ServerEvent = {
+  event: string
+  data: unknown
+}
+
+type ServerEventHandler = {
+  signature: string
+  handler: (event: ServerEvent) => unknown
+}
+
+export { ValidationRule, CommandAllowRule, ServerEvent, ServerEventHandler }

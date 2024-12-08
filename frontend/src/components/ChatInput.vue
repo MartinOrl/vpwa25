@@ -11,6 +11,7 @@
         padding: `${spacing(3)} ${spacing(8)}`,
         width: 'auto',
       }"
+      :disabled="isOffline"
       class="break-md-w-full"
     />
     <div
@@ -61,16 +62,23 @@
 </template>
 
 <script setup lang="ts">
+import { Subscription } from '@adonisjs/transmit-client'
 import { computed, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
+import { backendTransmit } from '@/boot/transmit'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import { palette, spacing } from '@/css/theme'
+import { useAuthStore } from '@/stores/authStore'
+import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { Events } from '@/utils/types/command'
+import { UserStatus } from '@/utils/types/user'
 import CommandPrompt from './command/commandPrompt.vue'
-
+const { user } = useAuthStore()
 const commandStore = useCommandStore()
 const { callEvent } = commandStore
+const channelStore = useChannelStore()
+const { getActiveChannel } = channelStore
 
 const isUserTyping = ref(false)
 const userTyping = ref({
@@ -78,6 +86,12 @@ const userTyping = ref({
   message: '',
 })
 const showTyping = ref(false)
+const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
+const activeChannel = ref(getActiveChannel())
+
+channelStore.$subscribe(() => {
+  activeChannel.value = getActiveChannel()
+})
 
 // watch for typing event, if 5 seconds pass without a typing event, set isUserTyping to false
 let typingTimeout: NodeJS.Timeout
@@ -92,25 +106,50 @@ watch(isUserTyping, (value) => {
   }
 })
 
-commandStore.$subscribe(() => {
-  const { event } = commandStore
-  if (event?.type === Events.Typing && event.data) {
-    isUserTyping.value = true
-    userTyping.value = event.data as {
-      name: string
-      message: string
+let isTypingSub: Subscription | null = null
+
+if (activeChannel.value) {
+  isTypingSub = backendTransmit.subscription(
+    `channel/${activeChannel.value?.id}/typing`,
+  )
+
+  isTypingSub.create()
+  isTypingSub.onMessage((data: string) => {
+    const { message, name } = JSON.parse(data)
+    if (!message) {
+      isUserTyping.value = false
+    } else {
+      isUserTyping.value = true
+      userTyping.value = {
+        name,
+        message,
+      }
     }
-  } else if (
-    event?.type === Events.TypingStop ||
-    (event?.type === Events.Typing && !event.data) ||
-    event?.type === Events.SendMessage
-  ) {
-    isUserTyping.value = false
-    userTyping.value = {
-      name: '',
-      message: '',
-    }
+  })
+}
+
+watch(activeChannel, () => {
+  if (isTypingSub?.isCreated) {
+    isTypingSub.delete()
   }
+
+  isTypingSub = backendTransmit.subscription(
+    `channel/${activeChannel.value?.id}/typing`,
+  )
+
+  isTypingSub.create()
+  isTypingSub.onMessage((data: string) => {
+    const { message, name } = JSON.parse(data)
+    if (!message) {
+      isUserTyping.value = false
+    } else {
+      isUserTyping.value = true
+      userTyping.value = {
+        name,
+        message,
+      }
+    }
+  })
 })
 
 const chatInputStyles = computed<CSSProperties>(() => ({

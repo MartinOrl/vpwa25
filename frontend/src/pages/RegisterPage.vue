@@ -116,18 +116,13 @@
 
 <script setup lang="ts">
 import { computed, defineComponent, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
+import { api } from '@/boot/axios'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
-import { useChannelStore } from '@/stores/channelStore'
-import { usersTest } from '@/tmp/dummy'
 import { ValidationRule } from '@/utils/types/misc'
-import { UserStatus } from '@/utils/types/user'
-const router = useRouter()
-const { login } = useAuthStore()
-const { addChannelMember, sendCustomMessage } = useChannelStore()
+// const router = useRouter()
 
 // Reactive state for input
 const form = reactive({
@@ -166,34 +161,17 @@ const getValidationRules = (value: string) => {
   return rules
 }
 
-const handleRegister = () => {
-  const userMatch = usersTest.find(
-    (user) => user.email === form.email || user.nickName === form.nickName,
-  )
-
-  if (userMatch) return
-  const userID = 100 + Math.floor(Math.random() * 100)
-  login(
-    {
-      id: userID,
-      email: form.email,
-      name: form.firstName,
-      nickName: form.nickName,
-      surname: form.lastName,
-      status: UserStatus.ONLINE,
-      image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
-    },
-    'forcelogin',
-  )
-  addChannelMember(1, userID)
-  sendCustomMessage(1, {
-    content: `${form.firstName} ${form.lastName} has joined the channel`,
-    channelID: 1,
-    senderID: 0,
-    messageID: 1000 + Math.floor(Math.random() * 100),
-    timestamp: new Date().toISOString(),
+const handleRegister = async () => {
+  const res = await api.post('/auth/register', {
+    email: form.email,
+    firstName: form.firstName,
+    lastName: form.lastName,
+    nickName: form.nickName,
+    password: form.password,
   })
-  router.push('/chat')
+  console.log('User registered', res.data)
+
+  // router.push('/chat')
 }
 
 defineComponent({

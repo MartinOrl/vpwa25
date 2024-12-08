@@ -6,6 +6,24 @@
     }"
   >
     <div
+      v-if="isOffline"
+      :style="{
+        position: 'absolute',
+        top: '0',
+        zIndex: 100,
+        width: '100%',
+        padding: spacing(2),
+        background: palette.warning,
+        color: palette.textOnPrimary,
+        borderBottom: `1px solid ${palette.border}`,
+        textAlign: 'center',
+      }"
+    >
+      <p>
+        You are currently offline. In order to chat, please update your status
+      </p>
+    </div>
+    <div
       :style="{
         position: 'absolute',
         height: '100%',
@@ -68,29 +86,62 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onUpdated, ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { computed, nextTick, onBeforeMount, onUpdated, ref, watch } from 'vue'
 import ChannelMessage from '@/components/channel/channelMessage.vue'
 import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
 import ChatInput from '@/components/ChatInput.vue'
 import { palette, spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
+import { UserStatus } from '@/utils/types/user'
 const channelStore = useChannelStore()
 const { user } = useAuthStore()
+
+const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
 
 const isNoChannelSelected = ref(
   (channelStore.getUserChannels(user?.id as number) ?? []).length === 0,
 )
 
+const activeChannelId = ref(channelStore.getActiveChannel()?.id as number)
+
+const activeChannel = computed(() => {
+  const activeChannel = channelStore.getActiveChannel()
+  return activeChannel
+})
+
+const $q = useQuasar()
+
+watch(
+  () => $q.appVisible,
+  async (isVisible) => {
+    if (isVisible) {
+      await channelStore.load()
+    }
+  },
+)
+
+onBeforeMount(async () => {
+  await channelStore.load()
+})
+
+watch(activeChannel, async () => {
+  if (activeChannel.value) {
+    await channelStore.load()
+  }
+})
+
 channelStore.$subscribe(() => {
-  const userChannels = channelStore.getUserChannels(user?.id as number) ?? []
+  const userChannels = channelStore.getChannels() || []
 
   if (userChannels?.length > 0) {
     isNoChannelSelected.value = false
   } else {
     isNoChannelSelected.value = true
   }
-  console.log('isNoChannelSelected', isNoChannelSelected.value)
+
+  activeChannelId.value = channelStore.getActiveChannel()?.id as number
 })
 
 const messages = computed(() => {

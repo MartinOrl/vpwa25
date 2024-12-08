@@ -10,11 +10,11 @@ enum ChannelRole {
 }
 
 type ChannelMessage = {
-  messageID: number
+  messageId: number
   content: string
   timestamp: string
-  senderID: number
-  channelID: number
+  senderId: number
+  channelId: number
 }
 
 type Notification = {
@@ -33,7 +33,6 @@ type ChannelInfo = {
   id: number
   name: string
   privacy: ChannelPrivacy
-  slug: string
   members: ChannelMember[]
 }
 
@@ -53,6 +52,16 @@ type ChannelData = ChannelInfo & {
   messages: ChannelMessage[]
 }
 
+type ApiUser = {
+  id: number
+  firstName: string
+  lastName: string
+  nickName: string
+  email: string
+  profilePicture: string
+  status: string
+}
+
 export {
   ChannelPrivacy,
   Channel,
@@ -61,4 +70,6 @@ export {
   ChannelData,
   ChannelMessage,
   ChannelMetadata,
+  ChannelMember,
+  ApiUser,
 }

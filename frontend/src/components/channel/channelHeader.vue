@@ -32,21 +32,18 @@ import { computed, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import ChannelMembers from '@/components/channel/channelMembers.vue'
 import { palette, spacing } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { ChannelInfo, ChannelPrivacy } from '@/utils/types/channel'
 
 const channelStore = useChannelStore()
-const { user } = useAuthStore()
 
-const { getActiveChannel, getUserChannels } = channelStore
+const { getActiveChannel, getChannels } = channelStore
 
-const isNoChannelSelected = ref(
-  (getUserChannels(user?.id as number) ?? []).length === 0,
-)
+const isNoChannelSelected = ref((getChannels ?? []).length === 0)
 
 channelStore.$subscribe(() => {
-  if ((getUserChannels(user?.id as number) ?? [])?.length > 0) {
+  const channels = getChannels()
+  if ((channels ?? [])?.length > 0) {
     isNoChannelSelected.value = false
   } else {
     isNoChannelSelected.value = true

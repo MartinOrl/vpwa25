@@ -1,3 +1,4 @@
+import { api } from '@/boot/axios'
 import { useChannelStore } from '@/stores/channelStore'
 import type { Command } from '../types/command'
 
@@ -11,9 +12,8 @@ const quitChannelCommand: Command = {
     return true
   },
   allows: () => true,
-  run: () => {
-    const { getActiveChannel, isChannelAdmin, removeChannel } =
-      useChannelStore()
+  run: async () => {
+    const { getActiveChannel, isChannelAdmin } = useChannelStore()
 
     const activeChannel = getActiveChannel()
 
@@ -24,7 +24,8 @@ const quitChannelCommand: Command = {
       return
     }
 
-    removeChannel(activeChannel?.id as number)
+    const res = await api.delete(`/channel/${activeChannel?.name}`)
+    console.log('res', res)
   },
 }
 

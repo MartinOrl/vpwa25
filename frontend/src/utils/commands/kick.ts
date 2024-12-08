@@ -1,6 +1,5 @@
+import { api } from '@/boot/axios'
 import { useChannelStore } from '@/stores/channelStore'
-import { usersTest } from '@/tmp/dummy'
-import { ChannelRole } from '../types/channel'
 import { MatchUsersList, type Command } from '../types/command'
 import { CommandAllowRule } from '../types/misc'
 
@@ -20,72 +19,80 @@ const kickUserCommand: Command = {
     return true
   },
   allows: (arg: CommandAllowRule) => kickUserCommand.args.includes(arg),
-  run: (args: string[]) => {
+  run: async (args: string[]) => {
     const userToKick = args[0].slice(1)
+    const { getActiveChannel } = useChannelStore()
 
-    const {
-      getActiveChannel,
-      forceKickUser,
-      sendCustomMessage,
-      isChannelAdmin,
-      updateUserKickCount,
-    } = useChannelStore()
+    const res = await api.post('/channel/kick', {
+      userName: userToKick,
+      channelName: getActiveChannel()?.name,
+    })
 
-    const matchedUser = usersTest.find((u) => u.nickName === userToKick)
+    console.log('res', res)
 
-    if (!matchedUser) {
-      return
-    }
+    // const {
+    //   getActiveChannel,
+    //   forceKickUser,
+    //   sendCustomMessage,
+    //   isChannelAdmin,
+    //   updateUserKickCount,
+    // } = useChannelStore()
 
-    const activeChannel = getActiveChannel()
+    // const matchedUser = usersTest.find((u) => u.nickName === userToKick)
 
-    if (!activeChannel) {
-      return
-    }
+    // if (!matchedUser) {
+    //   return
+    // }
 
-    const channelMember = activeChannel.members.find(
-      (m) => m.userId === matchedUser.id,
-    )
+    // const activeChannel = getActiveChannel()
 
-    if (isChannelAdmin(activeChannel.id)) {
-      console.log('You are an admin of this channel')
-      forceKickUser(activeChannel.id, matchedUser.id)
-      sendCustomMessage(activeChannel.id, {
-        channelID: activeChannel.id,
-        senderID: 0,
-        content: `${matchedUser.nickName} was kicked from the channel`,
-        timestamp: new Date().toISOString(),
-        messageID: 100 + Math.floor(Math.random() * 1000),
-      })
+    // if (!activeChannel) {
+    //   return
+    // }
 
-      return
-    }
+    // const channelMember = activeChannel.members.find(
+    //   (m) => m.userId === matchedUser.id,
+    // )
 
-    if (channelMember?.role === ChannelRole.ADMIN) return
+    // if (isChannelAdmin(activeChannel.id)) {
+    //   console.log('You are an admin of this channel')
+    //   forceKickUser(activeChannel.id, matchedUser.id)
+    //   sendCustomMessage(activeChannel.id, {
+    //     channelId: activeChannel.id,
+    //     senderId: 0,
+    //     content: `${matchedUser.nickName} was kicked from the channel`,
+    //     timestamp: new Date().toISOString(),
+    //     messageId: 100 + Math.floor(Math.random() * 1000),
+    //   })
 
-    const kickCount = channelMember?.kickCount || 0
-    if (kickCount === 3) return
+    //   return
+    // }
 
-    if (kickCount === 2) {
-      sendCustomMessage(activeChannel.id, {
-        channelID: activeChannel.id,
-        senderID: 0,
-        content: `${matchedUser.nickName} was kicked from the channel`,
-        timestamp: new Date().toISOString(),
-        messageID: 100 + Math.floor(Math.random() * 1000),
-      })
-    } else {
-      sendCustomMessage(activeChannel.id, {
-        channelID: activeChannel.id,
-        senderID: 0,
-        content: `${matchedUser.nickName} kick count increased to ${
-          kickCount + 1
-        }`,
-        timestamp: new Date().toISOString(),
-        messageID: 100 + Math.floor(Math.random() * 1000),
-      })
-    }
-    updateUserKickCount(activeChannel.id, matchedUser.id)
+    // if (channelMember?.role === ChannelRole.ADMIN) return
+
+    // const kickCount = channelMember?.kickCount || 0
+    // if (kickCount === 3) return
+
+    // if (kickCount === 2) {
+    //   sendCustomMessage(activeChannel.id, {
+    //     channelId: activeChannel.id,
+    //     senderId: 0,
+    //     content: `${matchedUser.nickName} was kicked from the channel`,
+    //     timestamp: new Date().toISOString(),
+    //     messageId: 100 + Math.floor(Math.random() * 1000),
+    //   })
+    // } else {
+    //   sendCustomMessage(activeChannel.id, {
+    //     channelId: activeChannel.id,
+    //     senderId: 0,
+    //     content: `${matchedUser.nickName} kick count increased to ${
+    //       kickCount + 1
+    //     }`,
+    //     timestamp: new Date().toISOString(),
+    //     messageId: 100 + Math.floor(Math.random() * 1000),
+    //   })
+    // }
+    // updateUserKickCount(activeChannel.id, matchedUser.id)
 
     // if (
     //   activeChannel?.privacy === ChannelPrivacy.PRIVATE &&

@@ -1,6 +1,5 @@
+import { api } from '@/boot/axios'
 import { useChannelStore } from '@/stores/channelStore'
-import { usersTest } from '@/tmp/dummy'
-import { ChannelPrivacy, ChannelRole } from '../types/channel'
 import { MatchUsersList, type Command } from '../types/command'
 import { CommandAllowRule } from '../types/misc'
 
@@ -20,73 +19,85 @@ const inviteToChannelCommand: Command = {
     return true
   },
   allows: (arg: CommandAllowRule) => inviteToChannelCommand.args.includes(arg),
-  run: (args: string[]) => {
+  run: async (args: string[]) => {
     const userToInvite = args[0].slice(1)
-
-    const {
-      addChannelMember,
-      getActiveChannel,
-      updateChannelMetadata,
-      getChannelMetadata,
-      isChannelAdmin,
-      sendCustomMessage,
-      restoreUser,
-    } = useChannelStore()
-
-    const matchedUser = usersTest.find((u) => u.nickName === userToInvite)
-
-    if (!matchedUser) {
-      return
-    }
-
+    const { getActiveChannel, reloadMembers } = useChannelStore()
     const activeChannel = getActiveChannel()
 
-    if (
-      activeChannel?.privacy === ChannelPrivacy.PRIVATE &&
-      !isChannelAdmin()
-    ) {
-      console.log('You are not an admin of this channel')
-      return
-    }
-
-    const channelMember = activeChannel?.members.find(
-      (m) => m.userId === matchedUser.id,
+    const res = await api.post(
+      `/channel/${activeChannel?.name.toLowerCase()}/invite`,
+      {
+        nickName: userToInvite,
+      },
     )
 
-    if (channelMember) {
-      if (channelMember.role === ChannelRole.KICKED) {
-        restoreUser(activeChannel?.id as number, matchedUser.id)
-        sendCustomMessage(activeChannel?.id as number, {
-          channelID: activeChannel?.id as number,
-          senderID: 0,
-          content: `${matchedUser.nickName} was restored to the channel`,
-          timestamp: new Date().toISOString(),
-          messageID: 100 + Math.floor(Math.random() * 1000),
-        })
-      }
+    console.log('res', res)
+    reloadMembers(activeChannel?.name as string)
 
-      return
-    }
+    // const {
+    //   addChannelMember,
+    //   getActiveChannel,
+    //   updateChannelMetadata,
+    //   getChannelMetadata,
+    //   isChannelAdmin,
+    //   sendCustomMessage,
+    //   restoreUser,
+    // } = useChannelStore()
 
-    const existingChannelMetadata = getChannelMetadata(
-      activeChannel?.id as number,
-    )
+    // const matchedUser = usersTest.find((u) => u.nickName === userToInvite)
 
-    updateChannelMetadata(activeChannel?.id as number, {
-      channelId: activeChannel?.id as number,
-      isInvitation: true,
-      notifications: existingChannelMetadata?.notifications || [],
-    })
+    // if (!matchedUser) {
+    //   return
+    // }
 
-    sendCustomMessage(activeChannel?.id as number, {
-      channelID: activeChannel?.id as number,
-      senderID: 0,
-      content: `${userToInvite} has been invited to the channel`,
-      timestamp: new Date().toISOString(),
-      messageID: 100 + Math.floor(Math.random() * 1000),
-    })
+    // const activeChannel = getActiveChannel()
 
-    addChannelMember(activeChannel?.id || 0, matchedUser?.id || 0)
+    // if (
+    //   activeChannel?.privacy === ChannelPrivacy.PRIVATE &&
+    //   !isChannelAdmin()
+    // ) {
+    //   console.log('You are not an admin of this channel')
+    //   return
+    // }
+
+    // const channelMember = activeChannel?.members.find(
+    //   (m) => m.userId === matchedUser.id,
+    // )
+
+    // if (channelMember) {
+    //   if (channelMember.role === ChannelRole.KICKED) {
+    //     restoreUser(activeChannel?.id as number, matchedUser.id)
+    //     sendCustomMessage(activeChannel?.id as number, {
+    //       channelId: activeChannel?.id as number,
+    //       senderId: 0,
+    //       content: `${matchedUser.nickName} was restored to the channel`,
+    //       timestamp: new Date().toISOString(),
+    //       messageId: 100 + Math.floor(Math.random() * 1000),
+    //     })
+    //   }
+
+    //   return
+    // }
+
+    // const existingChannelMetadata = getChannelMetadata(
+    //   activeChannel?.id as number,
+    // )
+
+    // updateChannelMetadata(activeChannel?.id as number, {
+    //   channelId: activeChannel?.id as number,
+    //   isInvitation: true,
+    //   notifications: existingChannelMetadata?.notifications || [],
+    // })
+
+    // sendCustomMessage(activeChannel?.id as number, {
+    //   channelId: activeChannel?.id as number,
+    //   senderId: 0,
+    //   content: `${userToInvite} has been invited to the channel`,
+    //   timestamp: new Date().toISOString(),
+    //   messageId: 100 + Math.floor(Math.random() * 1000),
+    // })
+
+    // addChannelMember(activeChannel?.id || 0, matchedUser?.id || 0)
   },
 }
 

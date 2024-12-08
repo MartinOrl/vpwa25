@@ -1,6 +1,6 @@
 <template>
   <q-btn flat no-caps unelevated dense :style="channelCardStyles">
-    <div :style="channelContainerStyles" @click="selectChannel">
+    <div :style="channelContainerStyles" @click.stop="selectChannel">
       <q-icon
         :name="
           $props.channel.privacy === ChannelPrivacy.PRIVATE ? 'lock' : 'public'
@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, ref } from 'vue'
+import { computed, defineComponent, onMounted, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import { spacing, palette } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
@@ -82,6 +82,7 @@ import quitChannelCommand from '@/utils/commands/quit'
 import {
   ChannelData,
   ChannelInfo,
+  ChannelMetadata,
   ChannelPrivacy,
   ChannelRole,
 } from '@/utils/types/channel'
@@ -132,12 +133,30 @@ const isNotification = false
 
 const isChannelActive = computed(() => {
   const activeChannel = getActiveChannel()
-  return activeChannel?.slug === props.channel.slug
+  return activeChannel?.id === props.channel.id
 })
 
 const selectChannel = () => {
   setActiveChannel(props.channel)
+
+  const metadata = channelStore.getChannelMetadata(props.channel.id)
+  const _meta = {
+    ...metadata,
+    isInvitation: false,
+  }
+  console.log('metadata', _meta)
+  channelStore.updateChannelMetadata(props.channel.id, _meta as ChannelMetadata)
 }
+
+onMounted(() => {
+  const channelMetadata = channelStore.getChannelMetadata(
+    props.channel?.id as number,
+  )
+  hasNotifications.value =
+    Boolean(channelMetadata?.notifications.length) || false
+  notificationsCount.value = channelMetadata?.notifications.length || 0
+  isUserInvited.value = channelMetadata?.isInvitation || false
+})
 
 channelStore.$subscribe(() => {
   const channelMetadata = channelStore.getChannelMetadata(

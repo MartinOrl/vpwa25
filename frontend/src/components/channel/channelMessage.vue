@@ -1,15 +1,5 @@
 <template>
-  <img
-    :src="userData?.image"
-    :style="{
-      width: '2.25rem',
-      height: '2.25rem',
-      cursor: 'pointer',
-      display: 'block',
-      borderRadius: spacing(2),
-    }"
-    v-if="!isSystemMessage"
-  />
+  <UserProfileImage :user="userData" v-if="!isSystemMessage" />
   <div
     :style="{
       width: '100%',
@@ -28,7 +18,7 @@
         }"
         v-if="!isSystemMessage"
       >
-        {{ userData?.name }} {{ userData?.surname }}
+        {{ userData?.firstName }} {{ userData?.lastName }}
       </p>
       <span
         :style="{
@@ -59,8 +49,14 @@
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue'
 import { palette, spacing } from '@/css/theme'
-import { usersTest } from '@/tmp/dummy'
+import { useChannelStore } from '@/stores/channelStore'
+import { useUsersStore } from '@/stores/usersStore'
 import { ChannelMessage } from '@/utils/types/channel'
+import { User } from '@/utils/types/user'
+import UserProfileImage from '../user/userProfileImage.vue'
+
+const { findUserById, findUserByNickname } = useUsersStore()
+const { isChannelMember } = useChannelStore()
 
 const props = defineProps<{
   message: ChannelMessage
@@ -69,7 +65,7 @@ const props = defineProps<{
 const timestampReadable = ref('')
 
 const isSystemMessage = computed(() => {
-  return props.message.senderID === 0
+  return props.message.senderId === 0
 })
 
 const allowedMentions = ['@here', '@everyone']
@@ -80,16 +76,14 @@ const processedContent = computed(() => {
   if (mentions) {
     mentions.forEach((mention) => {
       const username = mention.slice(1)
-      let user =
-        usersTest.find((user) => user.nickName === username)?.nickName || null
-      if (!user) {
-        user = allowedMentions.includes(mention) ? mention.slice(1) : null
-      }
+      let user = findUserByNickname(username) || null
+      const isAllowedMention = allowedMentions.includes(mention)
 
-      if (user) {
+      if ((user && isChannelMember(undefined, user.id)) || isAllowedMention) {
+        let flag = isAllowedMention ? mention : `@${user?.nickName}`
         rawContent = rawContent.replace(
           mention,
-          `<span style="color: ${palette.mention}; background: ${palette.mentionBackground}">@${user}</span>`,
+          `<span style="color: ${palette.mention}; background: ${palette.mentionBackground}">${flag}</span>`,
         )
       }
     })
@@ -109,7 +103,8 @@ const processedContent = computed(() => {
 })
 
 const userData = computed(() => {
-  return usersTest.find((user) => user.id === props.message.senderID)
+  const user = findUserById(props.message.senderId) as User
+  return user
 })
 
 const convertTimestampToReadable = () => {

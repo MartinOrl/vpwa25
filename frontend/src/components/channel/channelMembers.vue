@@ -34,7 +34,7 @@
       >
         <q-item
           v-for="member in channelMembersInfo.slice(0, 3)"
-          :key="member.username"
+          :key="member.nickName"
           :style="{
             display: 'flex',
             alignItems: 'center',
@@ -50,15 +50,7 @@
             zIndex: 100 - channelMembersInfo.indexOf(member),
           }"
         >
-          <img
-            :src="member.avatar"
-            :style="{
-              width: '1.75rem',
-              height: '1.75rem',
-              borderRadius: spacing(1),
-              minHeight: 'unset !important',
-            }"
-          />
+          <UserProfileImage :user="member" />
         </q-item>
       </q-list>
       <p
@@ -84,7 +76,7 @@
         <q-list>
           <q-item
             v-for="member in channelMembersInfo"
-            :key="member.username"
+            :key="member.nickName"
             clickable
             :style="{
               display: 'flex',
@@ -97,20 +89,13 @@
               marginBottom: spacing(1),
             }"
           >
-            <img
-              :src="member.avatar"
-              :style="{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: spacing(2),
-              }"
-            />
+            <UserProfileImage :user="member" />
             <p
               :style="{
                 color: palette.textOnPrimary,
               }"
             >
-              {{ member.username }}
+              {{ member.nickName }}
             </p>
             <div :style="statusDotStyles">
               <span
@@ -145,25 +130,35 @@ import type { CSSProperties } from 'vue'
 import { palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
-import { usersTest } from '@/tmp/dummy'
+import { useUsersStore } from '@/stores/usersStore'
 import { ChannelInfo, ChannelRole } from '@/utils/types/channel'
 import { Events } from '@/utils/types/command'
-import { UserStatus } from '@/utils/types/user'
+import { User, UserStatus } from '@/utils/types/user'
+import UserProfileImage from '../user/userProfileImage.vue'
 
 const { getChannelById, getActiveChannel } = useChannelStore()
 const commandStore = useCommandStore()
 const channelStore = useChannelStore()
+const { findUserById } = useUsersStore()
 
 const membersToolbar = ref(false)
 const channelId = ref(0)
 
 const toggleMembersToolbar = () => {
+  if (!membersToolbar.value) {
+    document.body.style.overflow = 'hidden '
+  } else {
+    document.body.style.overflow = 'auto'
+  }
+
   membersToolbar.value = !membersToolbar.value
 }
 
 const openMembersToolbar = () => {
   const activeChannel = getActiveChannel() as ChannelInfo
   channelId.value = activeChannel.id
+
+  document.body.style.overflow = 'hidden'
 
   membersToolbar.value = true
 }
@@ -191,13 +186,6 @@ commandStore.$subscribe(() => {
   }
 })
 
-type MemberInfo = {
-  avatar: string
-  username: string
-  role: ChannelRole
-  status: UserStatus
-}
-
 const dialogStyles = computed(() => ({
   background: palette.background,
   color: palette.textOnPrimary,
@@ -212,19 +200,31 @@ const channelMembersInfo = computed(() => {
     return []
   }
 
-  const members = channelMatch.members.filter(
-    (m) => m.role !== ChannelRole.KICKED,
-  )
+  const members = channelMatch.members
 
-  const memberInfo: MemberInfo[] = members.map((member) => {
-    const memberMatch = usersTest.find((user) => user.id === member.userId)
-    return {
-      avatar: memberMatch?.image || '',
-      username: memberMatch?.nickName || '',
-      role: member.role,
-      status: memberMatch?.status || UserStatus.OFFLINE,
+  const users: User[] = []
+
+  members.forEach((member) => {
+    const user = findUserById(member.userId)
+    if (user) {
+      users.push(user)
     }
   })
+
+  console.log('Members users', users)
+
+  const matchUserWithMember = (userId: number) => {
+    return members.find((member) => member.userId === userId)
+  }
+
+  const memberInfo = users.map((user) => {
+    return {
+      ...user,
+      role: matchUserWithMember(user.id)?.role || ChannelRole.MEMBER,
+    }
+  })
+
+  console.log('memberInfo', memberInfo)
 
   return memberInfo
 })

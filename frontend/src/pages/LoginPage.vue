@@ -82,13 +82,15 @@
 <script setup lang="ts">
 import { computed, defineComponent, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from '@/boot/axios'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
-import { usersTest } from '@/tmp/dummy'
+import { useChannelStore } from '@/stores/channelStore'
+import { ApiUser, ChannelMessage, ChannelRole } from '@/utils/types/channel'
 import { ValidationRule } from '@/utils/types/misc'
-import { UserStatus } from '@/utils/types/user'
+
 const router = useRouter()
 const { login } = useAuthStore()
 
@@ -118,39 +120,61 @@ const getValidationRules = (value: string) => {
   return rules
 }
 
-const handleLogin = () => {
-  const match = usersTest.find((user) => user.email === form.email)
+const handleLogin = async () => {
+  const res = await api.post('/auth/login', {
+    email: form.email,
+    password: form.password,
+  })
 
-  if (!match) {
-    console.log('User not found')
-    return
-  }
+  const { token, user } = res.data
 
-  login(
-    {
-      id: match.id,
-      email: form.email,
-      name: match.name,
-      nickName: match.nickName,
-      surname: match.surname,
-      status: UserStatus.ONLINE,
-      image: match.image,
-    },
-    'forcelogin',
+  api.defaults.headers.common.Authorization = token.headers.authorization
+
+  login(user, token.headers.authorization)
+
+  const channelsRes = await api.get('/channel/me')
+
+  const channels = channelsRes.data
+
+  const _channelsObj = channels.map(
+    (channel: {
+      id: number
+      name: string
+      privacy: string
+      ownerId: number
+      users: ApiUser[]
+      messages: ChannelMessage[]
+    }) => ({
+      id: channel.id,
+      name: channel.name,
+      privacy: channel.privacy,
+      slug: '',
+      members: channel.users.map((user: ApiUser) => ({
+        userId: user.id,
+        role:
+          user.id === channel.ownerId ? ChannelRole.ADMIN : ChannelRole.MEMBER,
+        joinedAt: '',
+        kickCount: 0,
+      })),
+      messages: channel.messages,
+    }),
   )
 
-  // login(
-  //   {
-  //     id: 1,
-  //     email: form.email,
-  //     name: 'Joe',
-  //     nickName: 'Joe',
-  //     surname: 'Doe',
-  //     status: UserStatus.ONLINE,
-  //     image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
-  //   },
-  //   'forcelogin',
-  // )
+  const { setChannels, setActiveChannel } = useChannelStore()
+  setChannels(_channelsObj)
+  setActiveChannel(_channelsObj[0])
+
+  // _channelsObj.forEach(async (channel: ChannelData) => {
+  //   const transmit = new Transmit({
+  //     baseUrl: 'http://localhost:3333',
+  //   })
+  //   const sub = transmit.subscription(`channel:${channel.id}`)
+  //   await sub.create()
+  //   sub.onMessage((message) => {
+  //     console.log(message)
+  //   })
+  // })
+
   router.push('/chat')
 }
 

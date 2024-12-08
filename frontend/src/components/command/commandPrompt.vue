@@ -7,6 +7,7 @@
         :type="'text'"
         :style="inputStyles"
         class="custom-input"
+        :disabled="isOffline"
         @input="onInput"
         @mousedown.stop
         @click.stop
@@ -106,32 +107,33 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties, VNodeRef } from 'vue'
+import { api } from '@/boot/axios'
 import { palette, spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
-import { usersTest } from '@/tmp/dummy'
+import { useUsersStore } from '@/stores/usersStore'
 import { getCommands } from '@/utils/commands'
-import { ChannelPrivacy, ChannelData, ChannelRole } from '@/utils/types/channel'
+import { ChannelPrivacy, ChannelRole } from '@/utils/types/channel'
 import { Events, MatchUsersList, type Command } from '@/utils/types/command'
 import { CommandAllowRule } from '@/utils/types/misc'
-import { User } from '@/utils/types/user'
+import { User, UserStatus } from '@/utils/types/user'
+
+type Suggestion = {
+  name: string
+}
 
 const commandStore = useCommandStore()
 const { setActiveCommand, callEvent } = commandStore
-const {
-  getChannels,
-  processSendMessage,
-  getActiveChannel,
-  updateChannelMetadata,
-  getChannelMetadata,
-} = useChannelStore()
+const { getChannels, processSendMessage, getActiveChannel } = useChannelStore()
 const { user } = useAuthStore()
+const { findUserById } = useUsersStore()
 
 const commandInput = ref('')
 const commandField = ref<VNodeRef | null>(null)
 const commandListMenuOpen = ref(false)
 const suggestionsOpen = ref(false)
+const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
 
 const openCommandsMenu = async () => {
   commandListMenuOpen.value = true
@@ -174,31 +176,51 @@ const selectedOption = ref('option1')
 const matchedCommand = ref<Command | null>(null)
 
 const suggestions = computed(() => {
+  console.log('Suggestions', commandInput.value)
   const _inputParts = commandInput.value.split(' ')
   const kwargs = _inputParts.slice(1)
+  console.log('kwargs', _inputParts)
 
   const suggestionRequest = kwargs[0] || ''
 
   if (suggestionRequest.startsWith('#')) {
     const channelName = suggestionRequest.slice(1)
-    return getChannels()?.filter((channel) =>
+    const filtered = getChannels()?.filter((channel) =>
       channel.name.toLowerCase().includes(channelName.toLowerCase()),
     )
+    return filtered?.map((channel) => ({
+      name: channel.name,
+    }))
   }
 
   if (suggestionRequest.startsWith('@')) {
     const nickName = suggestionRequest.slice(1)
 
-    const usersData = [...usersTest]
-    const memberIDRole =
-      getActiveChannel()?.members.map((member) => ({
-        id: member.userId,
-        role: member.role,
-      })) || []
+    const members = getActiveChannel()?.members || []
+
+    let usersData: {
+      id: number
+      nickName: string
+    }[] = []
+
+    members.forEach((member) => {
+      const user = findUserById(member.userId) as User
+      usersData.push({
+        id: user.id,
+        nickName: user.nickName,
+      })
+    })
+
+    console.log('Users sug', usersData)
+
+    const memberIDRole = members.map((matchedCommand) => ({
+      id: matchedCommand.userId,
+      role: matchedCommand.role,
+    }))
 
     if (matchedCommand.value?.usersMatch) {
       if (matchedCommand.value.usersMatch === MatchUsersList.MEMBERS) {
-        return usersData.filter(
+        usersData = usersData.filter(
           (member) =>
             member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
             member.id !== user?.id &&
@@ -207,17 +229,16 @@ const suggestions = computed(() => {
               ChannelRole.KICKED,
         )
       } else if (matchedCommand.value.usersMatch === MatchUsersList.OTHERS) {
-        return usersData.filter(
+        console.log('Other users', usersData, memberIDRole)
+        usersData = usersData.filter(
           (member) =>
             member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
             member.id !== user?.id &&
-            (!memberIDRole.find((m) => m.id === member.id) ||
-              memberIDRole.find((m) => m.id === member.id)?.role ===
-                ChannelRole.KICKED),
+            !memberIDRole.find((m) => m.id === member.id),
         )
       }
     } else {
-      return usersData.filter(
+      usersData = usersData.filter(
         (member) =>
           member.nickName.toLowerCase().startsWith(nickName.toLowerCase()) &&
           member.id !== user?.id &&
@@ -225,7 +246,9 @@ const suggestions = computed(() => {
       )
     }
 
-    return usersData
+    return usersData.map((user) => ({
+      name: user.nickName,
+    }))
   }
 
   return null
@@ -277,19 +300,24 @@ const getMenuDisplay = () => {
 
 commandStore.$subscribe(() => {
   const eventType = commandStore.event?.type as string
-  if (eventType === Events.RequestSendMessage) {
+
+  if (eventType === Events.RequestSendMessage && commandInput.value) {
     processSend()
-  } else if (eventType === Events.SendMessage) {
-    const message = commandInput.value
+  } else if (eventType === Events.SendMessage && commandInput.value) {
+    const message = `${commandInput.value}`
     processSendMessage(message)
     clearInput()
   }
 })
 
-const processSend = () => {
+const processSend = async () => {
   if (commandInput.value === '') return
   const _inputParts = commandInput.value.split(' ')
   const command = _inputParts[0]
+  api.post(`/channel/typing/${getActiveChannel()?.id}`, {
+    message: '',
+    name: '',
+  })
   if (command.startsWith('/')) {
     processCommand()
   } else {
@@ -297,33 +325,6 @@ const processSend = () => {
       type: Events.SendMessage,
       data: commandInput.value,
     })
-    const activeChannel = getActiveChannel()
-    const channelMetadata = getChannelMetadata(activeChannel?.id as number)
-    if (channelMetadata) {
-      updateChannelMetadata(activeChannel?.id as number, {
-        ...channelMetadata,
-        notifications: [
-          ...channelMetadata.notifications,
-          {
-            id: channelMetadata.notifications.length + 1,
-            message: commandInput.value,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      })
-    } else {
-      updateChannelMetadata(activeChannel?.id as number, {
-        channelId: activeChannel?.id as number,
-        isInvitation: false,
-        notifications: [
-          {
-            id: 1,
-            message: commandInput.value,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      })
-    }
   }
 }
 
@@ -400,6 +401,11 @@ const onInput = (event: Event) => {
       name: user?.nickName as string,
     },
   })
+
+  api.post(`/channel/typing/${getActiveChannel()?.id}`, {
+    message: commandInput.value,
+    name: user?.nickName,
+  })
 }
 
 const menuStyles = computed<CSSProperties>(() => ({
@@ -444,14 +450,14 @@ const inputStyles = computed<CSSProperties>(() => ({
   fontSize: '1rem',
 }))
 
-const handleClickSuggestion = (suggestion: User | ChannelData) => {
+const handleClickSuggestion = (suggestion: Suggestion) => {
   // commandInput.value = commandInput.value.split(' ')[0] + ' #' + channel.name
   if ('privacy' in suggestion) {
     commandInput.value =
       commandInput.value.split(' ')[0] + ' #' + suggestion.name
   } else {
     commandInput.value =
-      commandInput.value.split(' ')[0] + ' @' + suggestion.nickName
+      commandInput.value.split(' ')[0] + ' @' + suggestion.name
   }
   closeSuggestionsMenu()
 }
