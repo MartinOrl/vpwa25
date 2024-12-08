@@ -161,46 +161,35 @@ export default class KickController {
       .where('id', channelId)
       .andWhere('owner_id', auth.user!.id)
       .first()
+
     if (!channel) {
       return response.unauthorized({ message: 'You are not authorized to revoke this user' })
     }
 
     const isInChannel = await channel.related('users').query().where('user_id', userId).first()
 
-    if (isInChannel) {
-      return response.badRequest({ message: 'User is not kicked from the channel' })
+    if (!isInChannel) {
+      return response.badRequest({ message: 'User is not a member of channel' })
     }
 
-    channel.related('users').attach([userId])
-
-    await KickVote.query().where('user_id', userId).andWhere('channel_id', channelId).delete()
-
-    const user = await User.query().where('id', userId).select('nickName').first()
+    channel.related('users').detach([userId])
 
     const announcement = await Message.create({
       channelID: channelId,
       senderID: 0,
-      content: `${user!.nickName} has been revoked from the kick vote`,
+      content: `${u.nickName} has been revoked from the channel`,
     })
 
     notifyChannel(channelId, announcement)
 
-    const channelObj = await Channel.query()
-      .where('id', channelId)
-      .preload('users')
-      .preload('messages')
-      .first()
-
     transmit.broadcast(
       `events/user/${userId}`,
       JSON.stringify({
-        event: 'channel:invite',
-        data: {
-          channel: channelObj,
-        },
+        event: 'channel:leave',
+        data: channelId,
       })
     )
 
-    return response.ok({ message: 'User status has been revoked to MEMBER' })
+    return response.ok({ message: 'User status has been revoked ' })
   }
 }

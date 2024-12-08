@@ -3,11 +3,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
-  public async register({ request, response }: HttpContext) {
+  public async register({ request, auth, response }: HttpContext) {
     const userData = request.only(['email', 'firstName', 'lastName', 'nickName', 'password'])
     try {
       const user = await User.create(userData)
-      return response.created({ user })
+      const token = await auth.use('api').authenticateAsClient(user)
+      return response.created({ user, token })
     } catch (error) {
       console.error(error)
       return response.badRequest({ message: 'Unable to register user', error })
