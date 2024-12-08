@@ -6,6 +6,24 @@
     }"
   >
     <div
+      v-if="isOffline"
+      :style="{
+        position: 'absolute',
+        top: '0',
+        zIndex: 100,
+        width: '100%',
+        padding: spacing(2),
+        background: palette.warning,
+        color: palette.textOnPrimary,
+        borderBottom: `1px solid ${palette.border}`,
+        textAlign: 'center',
+      }"
+    >
+      <p>
+        You are currently offline. In order to chat, please update your status
+      </p>
+    </div>
+    <div
       :style="{
         position: 'absolute',
         height: '100%',
@@ -19,200 +37,150 @@
       id="chat-overflow"
     >
       <div
+        v-if="isNoChannelSelected"
+        :style="{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          color: palette.textOpaque,
+        }"
+      >
+        <p>No channel selected. Please select a channel to start chatting.</p>
+      </div>
+      <div
         class="chat-container"
         :style="{
           backgroundColor: palette.background,
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
-          padding: '10px',
+          padding: '10px 0',
           boxSizing: 'border-box',
           flex: 1,
           justifyContent: 'flex-end',
           marginTop: 'auto',
         }"
+        v-if="!isNoChannelSelected"
       >
         <div
           v-for="(msg, index) in messages"
           :key="index"
           class="message-bubble"
-          :style="getMessageStyle()"
         >
-          <img
-            :src="msg.image"
-            :style="{
-              width: '2.25rem',
-              height: '2.25rem',
-              cursor: 'pointer',
-              display: 'block',
-              borderRadius: spacing(2),
-            }"
+          <MessageDateSeparator
+            v-if="getShowDateSeparator(index)"
+            :date="new Date(msg.timestamp)"
           />
-          <div
-            :style="{
-              width: '100%',
-            }"
-          >
-            <div
-              :style="{
-                display: 'flex',
-                alignItems: 'flex-end',
-              }"
-            >
-              <p
-                :style="{
-                  fontWeight: 'bold',
-                }"
-              >
-                {{ msg.sender }}
-              </p>
-              <span
-                :style="{
-                  fontSize: '0.75rem',
-                  color: palette.textOpaque,
-                  marginLeft: spacing(1),
-                }"
-                >{{ msg.timestamp }}</span
-              >
-            </div>
-
-            <p
-              :style="{
-                marginTop: spacing(0.5),
-              }"
-            >
-              {{ msg.text }}
-            </p>
+          <div :style="getMessageStyle()">
+            <ChannelMessage :message="msg" />
           </div>
+        </div>
+        <div v-if="!messages.length" :style="noMessagesStyle">
+          <p>No messages yet. Start the conversation!</p>
         </div>
       </div>
     </div>
   </div>
-  <div
-    class="input-container break-md-col"
-    :style="{
-      display: 'flex',
-      width: '100%',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: 'auto',
-      padding: `${spacing(2)} ${spacing(3)}`,
-      gap: spacing(3),
-    }"
-  >
-    <QInputComponent
-      v-model="message"
-      label="Type your message here..."
-      @keydown.enter="sendMessage"
-      type="text"
-      errorMessage=""
-      :style="{
-        borderColor: palette.primary,
-        color: palette.textOpaque,
-        flexGrow: 1,
-      }"
-      outlined
-      clearable
-      dense
-      class="break-md-w-full"
-    />
-    <ButtonControl
-      label="Send Message"
-      variant="primary"
-      @click="sendMessage"
-      :style="{
-        backgroundColor: palette.primary,
-        color: palette.textOnPrimary,
-        padding: `${spacing(3)} ${spacing(8)}`,
-        width: 'auto',
-      }"
-      class="break-md-w-full"
-    />
-  </div>
+  <ChatInput />
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
-import ButtonControl from '@/components/control/ButtonControl.vue'
-import QInputComponent from '@/components/input/QInput.vue'
+import { useQuasar } from 'quasar'
+import { computed, nextTick, onBeforeMount, onUpdated, ref, watch } from 'vue'
+import ChannelMessage from '@/components/channel/channelMessage.vue'
+import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
+import ChatInput from '@/components/ChatInput.vue'
 import { palette, spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
-import { ChannelInfo } from '@/utils/types/channel'
-const message = ref('')
-const { user } = useAuthStore()
+import { UserStatus } from '@/utils/types/user'
 const channelStore = useChannelStore()
+const { user } = useAuthStore()
 
-type Message = {
-  text: string
-  sender: string
-  image: string
-  timestamp: string
-}
+const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
 
-const messages = ref<Message[]>([
-  {
-    text: 'Hello, how can I help you today?',
-    sender: 'Miguel',
+const isNoChannelSelected = ref(
+  (channelStore.getUserChannels(user?.id as number) ?? []).length === 0,
+)
 
-    image: 'https://randomuser.me/api/portraits/lego/6.jpg',
-    timestamp: '10:00 AM',
-  },
-])
+const activeChannelId = ref(channelStore.getActiveChannel()?.id as number)
 
-onMounted(() => {
-  const chatContainer = document.querySelector('#chat-overflow')
-  chatContainer?.scrollTo({
-    top: chatContainer.scrollHeight,
-  })
+const activeChannel = computed(() => {
+  const activeChannel = channelStore.getActiveChannel()
+  return activeChannel
 })
 
-// if active channel changes, reset messages. Check it by using subscribe method from pinia
-watch(
-  () => channelStore.getActiveChannel() as ChannelInfo | null,
-  (_newChannel: ChannelInfo | null) => {
-    messages.value = [
-      {
-        text: 'Hello, how can I help you today?',
-        sender: 'Miguel',
+const $q = useQuasar()
 
-        image: 'https://randomuser.me/api/portraits/lego/6.jpg',
-        timestamp: '10:00 AM',
-      },
-    ]
+watch(
+  () => $q.appVisible,
+  async (isVisible) => {
+    if (isVisible) {
+      await channelStore.load()
+    }
   },
 )
 
-const sendMessage = async () => {
-  if (message.value.trim() !== '') {
-    messages.value.push({
-      text: message.value,
-      sender: user?.name + ' ' + user?.surname,
-      image: user?.image ?? '',
-      timestamp: new Date().toLocaleTimeString('en-us', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    })
-    message.value = ''
+onBeforeMount(async () => {
+  await channelStore.load()
+})
+
+watch(activeChannel, async () => {
+  if (activeChannel.value) {
+    await channelStore.load()
   }
+})
+
+channelStore.$subscribe(() => {
+  const userChannels = channelStore.getChannels() || []
+
+  if (userChannels?.length > 0) {
+    isNoChannelSelected.value = false
+  } else {
+    isNoChannelSelected.value = true
+  }
+
+  activeChannelId.value = channelStore.getActiveChannel()?.id as number
+})
+
+const messages = computed(() => {
+  return channelStore.getChannelMessages()
+})
+
+onUpdated(async () => {
   await nextTick()
   const chatContainer = document.querySelector('#chat-overflow')
   chatContainer?.scrollTo({
     top: chatContainer.scrollHeight,
     behavior: 'smooth',
   })
+})
+
+const getShowDateSeparator = (index: number) => {
+  if (index === 0) return true
+  const currentDate = new Date(messages.value[index].timestamp)
+  const previousDate = new Date(messages.value[index - 1].timestamp)
+  return currentDate.getDate() !== previousDate.getDate()
 }
 
 const getMessageStyle = () => {
   return {
     color: palette.textOnPrimary,
-    padding: '10px 15px',
+    padding: '10px 20px',
     display: 'flex',
     gap: spacing(2),
     borderRadius: '20px',
     width: '100%',
     alignSelf: 'flex-start',
   }
+}
+
+const noMessagesStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  width: '100%',
+  color: palette.textOpaque,
 }
 </script>

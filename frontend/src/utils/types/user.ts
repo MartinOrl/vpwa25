@@ -6,12 +6,12 @@ enum UserStatus {
 
 type User = {
   id: number
-  name: string
-  surname: string
+  firstName: string
+  lastName: string
   nickName: string
   email: string
   status: UserStatus
-  image: string
+  profilePicture: string
 }
 
 export { UserStatus, User }

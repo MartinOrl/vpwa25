@@ -7,71 +7,82 @@
       background: palette.primary,
     }"
   >
-    <header
-      :style="{
-        background: palette.primary,
-        color: palette.textOnPrimary,
-        padding: '0.5rem 0.75rem 0.5rem 0',
-        display: 'flex',
-        alignItems: 'center',
-      }"
-    >
-      <div
-        :style="{
-          'max-width': containers.utils,
-          width: '100%',
-          display: 'block',
-        }"
-        class="hidden-md"
-      >
-        <div>
-          <div
-            :style="{
-              marginTop: 'auto',
-            }"
-          >
-            <ProfileIcon />
-          </div>
-        </div>
-      </div>
-      <div
-        :style="{
-          maxWidth: containers.sidebar,
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'end',
-        }"
-        class="break-md-w-unset"
-      >
-        <ChannelsHistory />
-      </div>
-      <CommandPrompt />
-    </header>
-
     <div
       :style="{
         display: 'flex',
         flexDirection: 'row',
         flex: '1',
       }"
+      class="break-md-col"
     >
-      <div :style="utilsStyles" class="break-md-hide">
-        <div
-          :style="{
-            marginTop: 'auto',
-          }"
-        >
-          <ProfileIcon />
-        </div>
+      <div :style="utilsStyles" class="break-md-mb-0">
+        <ProfileIcon />
       </div>
 
       <div :style="mainContentStyles" class="break-md-col">
         <q-list :style="drawerStyles" class="channelList">
           <ChannelCard
             v-for="channel in channels"
-            :key="channel.slug"
+            :key="channel.name"
             :channel="channel"
           />
+          <div
+            :style="{
+              position: 'absolute',
+              bottom: '0',
+              width: '100%',
+              left: '0',
+              maxWidth: containers.sidebar,
+            }"
+          >
+            <QInput
+              v-model="newChannelName"
+              :style="{
+                width: '100%',
+                padding: spacing(3),
+                color: palette.textOnPrimary,
+              }"
+              type="text"
+              :errorMessage="''"
+              label="Channel Name"
+            />
+            <div
+              :style="{
+                margin: spacing(3),
+                marginTop: '0',
+              }"
+            >
+              <div
+                :style="{
+                  padding: spacing(3),
+                  color: palette.textOnPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  background: palette.primary,
+                  borderRadius: spacing(2),
+                }"
+                @click.stop="() => requestCreateChannel('PUBLIC')"
+              >
+                Create Public Channel
+                <q-icon name="send" />
+              </div>
+              <div
+                :style="{
+                  padding: spacing(3),
+                  color: palette.primary,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  background: palette.textOnPrimary,
+                  borderRadius: spacing(2),
+                  marginTop: spacing(2),
+                }"
+                @click.stop="() => requestCreateChannel('PRIVATE')"
+              >
+                Create Private Channel
+                <q-icon name="send" />
+              </div>
+            </div>
+          </div>
         </q-list>
 
         <div
@@ -136,7 +147,7 @@
                 clickable
                 v-close-popup
                 v-for="channel in channels"
-                :key="channel.name"
+                :key="channel.id"
                 :style="{
                   padding: '0',
                 }"
@@ -155,10 +166,11 @@
             display: 'flex',
             flexDirection: 'column',
             maxHeight: '100%',
-            height: '100%',
+            position: 'relative',
           }"
         >
           <ChannelHeader />
+
           <router-view />
         </div>
       </div>
@@ -169,15 +181,16 @@
 <script setup lang="ts">
 import { computed, defineComponent, ref } from 'vue'
 import type { CSSProperties } from 'vue'
+import { api } from '@/boot/axios'
 import ChannelCard from '@/components/channel/channelCard.vue'
 import ChannelHeader from '@/components/channel/channelHeader.vue'
-import ChannelsHistory from '@/components/channel/channelsHistory.vue'
-import CommandPrompt from '@/components/command/commandPrompt.vue'
 import ProfileIcon from '@/components/control/ProfileIcon.vue'
+import QInput from '@/components/input/QInput.vue'
 import { containers, palette, spacing } from '@/css/theme'
 import { useChannelStore } from '@/stores/channelStore'
 
 const channelMenu = ref(false)
+const newChannelName = ref('')
 
 defineOptions({
   name: 'MainLayout',
@@ -191,9 +204,26 @@ defineComponent({
   },
 })
 
-const { getChannels } = useChannelStore()
+const requestCreateChannel = async (privacy: string) => {
+  if (!newChannelName.value) return
+  const res = await api.post('/channel/join', {
+    name: newChannelName.value,
+    privacy: privacy,
+  })
+  console.log('Channel created', res.data)
+  newChannelName.value = ''
+}
 
-const channels = computed(() => getChannels())
+const channelStore = useChannelStore()
+const { getChannels } = channelStore
+
+const channels = ref(getChannels())
+
+console.log('Channels', channels.value)
+
+channelStore.$subscribe(() => {
+  channels.value = getChannels()
+})
 
 function toggleChannelMenu() {
   console.log('toggleChannelMenu')
@@ -205,11 +235,9 @@ const mainContentStyles = computed<CSSProperties>(() => ({
   display: 'flex',
   flexDirection: 'row',
   background: palette.background,
+  position: 'relative',
   margin: `
-    0
     ${spacing(3)}
-    ${spacing(3)}
-
   `,
   borderRadius: `
     ${spacing(3)}
@@ -222,11 +250,11 @@ const utilsStyles = computed<CSSProperties>(() => ({
   width: '100%',
   border: 'none',
   background: palette.primary,
-  flex: '1',
   display: 'flex',
   flexDirection: 'column',
   marginBottom: spacing(8),
   marginRight: `-${spacing(3)}`,
+  marginTop: spacing(3),
 }))
 
 const drawerStyles = computed<CSSProperties>(() => ({
@@ -236,5 +264,7 @@ const drawerStyles = computed<CSSProperties>(() => ({
   flex: '1',
   height: '100%',
   borderRight: `1px solid ${palette.border}`,
+  display: 'flex',
+  flexDirection: 'column',
 }))
 </script>

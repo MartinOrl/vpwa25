@@ -116,15 +116,13 @@
 
 <script setup lang="ts">
 import { computed, defineComponent, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
+import { api } from '@/boot/axios'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
 import { ValidationRule } from '@/utils/types/misc'
-import { UserStatus } from '@/utils/types/user'
-const router = useRouter()
-const { login } = useAuthStore()
+// const router = useRouter()
 
 // Reactive state for input
 const form = reactive({
@@ -163,20 +161,17 @@ const getValidationRules = (value: string) => {
   return rules
 }
 
-const handleRegister = () => {
-  login(
-    {
-      id: 1,
-      email: form.email,
-      name: 'Joe',
-      nickName: 'Joe',
-      surname: 'Doe',
-      status: UserStatus.ONLINE,
-      image: 'https://randomuser.me/api/portraits/thumb/men/18.jpg',
-    },
-    'forcelogin',
-  )
-  router.push('/chat')
+const handleRegister = async () => {
+  const res = await api.post('/auth/register', {
+    email: form.email,
+    firstName: form.firstName,
+    lastName: form.lastName,
+    nickName: form.nickName,
+    password: form.password,
+  })
+  console.log('User registered', res.data)
+
+  // router.push('/chat')
 }
 
 defineComponent({

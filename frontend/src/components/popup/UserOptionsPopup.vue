@@ -20,16 +20,7 @@
               minWidth: '200px',
             }"
           >
-            <img
-              :src="user?.image"
-              alt="Profile"
-              :style="{
-                objectFit: 'contain',
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: spacing(2),
-              }"
-            />
+            <UserProfileImage :user="user" :size="40" />
             <div>
               <p
                 :style="{
@@ -37,7 +28,7 @@
                   color: palette.textOnPrimary,
                 }"
               >
-                {{ user?.name + ' ' + user?.surname }}
+                {{ user?.firstName + ' ' + user?.lastName }}
               </p>
               <p
                 :style="{
@@ -169,13 +160,33 @@
 import { computed, defineComponent, ref } from 'vue'
 import { palette, spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
-import { UserStatus } from '@/utils/types/user'
-const { user, logout, updateStatus } = useAuthStore()
+import { useChannelStore } from '@/stores/channelStore'
+import { useUsersStore } from '@/stores/usersStore'
+import { User, UserStatus } from '@/utils/types/user'
+import UserProfileImage from '../user/userProfileImage.vue'
+
+const { user, logout, updateStatus } = useAuthStore() as {
+  user: User
+  logout: () => void
+  updateStatus: (status: UserStatus) => void
+}
+const { updateUserStatus } = useUsersStore()
+const { detach, reattach } = useChannelStore()
+
+const _options = [
+  { label: 'Online', value: UserStatus.ONLINE },
+  { label: 'Do not disturb', value: UserStatus.DO_NOT_DISTURB },
+  { label: 'Offline', value: UserStatus.OFFLINE },
+]
 
 const statusDialog = ref(false)
 const statusMenuDialog = ref(false)
 const statusType = computed(() => user?.status)
-const statusSelect = ref(user?.status)
+const statusSelect = ref(
+  _options.find(
+    (option) => option.value.toUpperCase() === user.status.toUpperCase(),
+  )?.label,
+)
 
 const buttonStyles = computed(() => ({
   background: 'transparent',
@@ -198,12 +209,6 @@ const dialogStyles = computed(() => ({
   background: palette.background,
   color: palette.textOnPrimary,
 }))
-
-const _options = [
-  { label: 'Online', value: UserStatus.ONLINE },
-  { label: 'Do not disturb', value: UserStatus.DO_NOT_DISTURB },
-  { label: 'Offline', value: UserStatus.OFFLINE },
-]
 
 defineComponent({
   setup() {
@@ -230,5 +235,11 @@ const _handleSelect = (value: { label: string; value: UserStatus }) => {
 
 function handleUpdateStatus() {
   updateStatus(statusSelect.value as UserStatus)
+  updateUserStatus(user.id, statusSelect.value as UserStatus)
+  if (statusSelect.value === UserStatus.OFFLINE) {
+    detach()
+  } else {
+    reattach()
+  }
 }
 </script>

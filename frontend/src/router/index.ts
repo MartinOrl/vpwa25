@@ -45,13 +45,31 @@ export default route(function () {
   })
 
   Router.beforeEach((to, _, next) => {
-    if (!authStore.loadUser() && !to.path.startsWith('/auth')) {
-      next('/auth/login')
-    } else if (to.path === '/' || to.path === '/auth') {
-      next('/chat')
-    } else {
+    if (to.path === '/auth/login' || to.path === '/auth/register') {
       next()
+      return
     }
+
+    const userReq = authStore.loadUser()
+
+    userReq
+      .then((user) => {
+        if (!user && !to.path.startsWith('/auth')) {
+          console.log('Redirecting to login 1')
+          next('/auth/login')
+        } else if (to.path === '/' || to.path === '/auth') {
+          console.log('Redirecting to chat')
+          next('/chat')
+        } else {
+          next()
+        }
+      })
+      .catch((_err) => {
+        console.log('Redirecting to login')
+        if (!to.path.startsWith('/auth')) {
+          next('/auth/login')
+        }
+      })
   })
 
   return Router
