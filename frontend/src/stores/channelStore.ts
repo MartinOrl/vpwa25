@@ -4,6 +4,7 @@ import qs from 'qs'
 import { api } from '@/boot/axios'
 import { backendTransmit } from '@/boot/transmit'
 import processUserEvent from '@/utils/events/events'
+import { notify } from '@/utils/notify'
 import {
   ChannelMember,
   ChannelMetadata,
@@ -31,6 +32,7 @@ export const bindEventListener = async (userId: number) => {
 
   eventSub.onMessage((message: string) => {
     const event: ServerEvent = JSON.parse(message)
+    console.log('Received event:', event)
     processUserEvent(event)
   })
 }
@@ -54,9 +56,39 @@ export const bindChannelMessageListener = (channelId: number) => {
     messageSubs[channelId].create()
   }
 
-  messageSubs[channelId].onMessage((message: ChannelMessage) => {
+  messageSubs[channelId].onMessage((message: string) => {
+    const { event, data } = JSON.parse(message)
+
     console.log('Received message:', message)
-    addMessageToChannel(channelId, message)
+
+    if (event === 'message:new') {
+      const _message = data as ChannelMessage
+
+      if (
+        _message.content.includes('has joined the channel') ||
+        _message.content.includes('has left') ||
+        _message.content.includes('has been kicked from the channel') ||
+        _message.content.includes('has invited')
+      ) {
+        const store = useChannelStore()
+        store.reloadMembers(store.activeChannel?.name as string)
+      }
+
+      console.log('Received message:', message)
+      addMessageToChannel(channelId, _message)
+      const { findUserById } = useUsersStore()
+      const sender = findUserById(_message.senderId)?.nickName
+      if (sender) {
+        const _a = document.visibilityState
+        if (_a === 'hidden') {
+          notify(_message.content, sender as string)
+        }
+      }
+    } else if (event === 'status:update') {
+      const { updateUserStatus } = useUsersStore()
+      const { id, status } = data as User
+      updateUserStatus(id, status)
+    }
   })
 }
 
@@ -75,7 +107,7 @@ export const useChannelStore = defineStore('channel', {
     metadata: [] as ChannelMetadata[],
     pagination: {
       page: 1,
-      limit: 10,
+      limit: 35,
     },
   }),
 
@@ -85,11 +117,15 @@ export const useChannelStore = defineStore('channel', {
     },
     detach() {
       this.channels?.forEach((c) => unbindChannelMessageListener(c.id))
+      unbindEventListener()
     },
-    reattach() {
-      this.channels?.forEach((c) => bindChannelMessageListener(c.id))
+    async reattach() {
+      const authStore = useAuthStore()
+      await authStore.loadUser()
+    },
 
-      this.loadMessages()
+    findChannelByName(channelName: string) {
+      return this.channels?.find((c) => c.name === channelName) || null
     },
 
     async reloadMembers(channelName: string) {
@@ -99,8 +135,16 @@ export const useChannelStore = defineStore('channel', {
       const channelMembers = this.channels?.find(
         (c) => c.name === channelName,
       )?.members
+
+      const nonMembers = channelMembers?.filter(
+        (m) => !users.find((u: User) => u.id === m.userId),
+      )
+      nonMembers?.forEach((m) => {
+        this.removeChannelMember(this.activeChannel?.id as number, m.userId)
+      })
+
       users.forEach((user: User) => {
-        usersStore.updateUser(user)
+        usersStore.addOrUpdateUser(user)
         const _m = {
           userId: user.id,
           role:
@@ -166,8 +210,11 @@ export const useChannelStore = defineStore('channel', {
     },
     addMessageToChannel(channelId: number, message: ChannelMessage) {
       const channel = this.channels?.find((c) => c.id === channelId) || null
-      console.log('channel', channelId)
-      channel?.messages.push(message)
+      console.log(message)
+      console.log(channel?.messages)
+      if (!channel?.messages.find((m) => m.id == message.id)) {
+        channel?.messages.push(message)
+      }
       if (this.activeChannel?.id === channelId) {
         this.activeChannel = channel
       }
@@ -231,6 +278,7 @@ export const useChannelStore = defineStore('channel', {
         : this.activeChannel
       if (!channel || !user) return false
       const member = channel.members.find((m) => m.userId === user.id)
+      console.log('member', member)
       return member?.role === ChannelRole.ADMIN
     },
     isChannelMember(channelId?: number, userId?: number) {
@@ -253,7 +301,9 @@ export const useChannelStore = defineStore('channel', {
     },
 
     addChannel(channel: ChannelData, setActive = true) {
-      if (!this.channels?.find((c) => c.id === channel.id)) return
+      console.log('addChannel', channel)
+      if (this.channels?.find((c) => c.id === channel.id)) return
+
       this.channels?.push(channel)
       if (setActive) {
         this.setActiveChannel(channel)

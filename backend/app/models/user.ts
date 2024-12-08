@@ -33,6 +33,9 @@ export default class User extends BaseModel {
   @column({ columnName: 'status' })
   declare status: typeof UserStatus
 
+  @column({ columnName: 'notifications' })
+  declare notifications: 'default' | 'mention'
+
   @manyToMany(() => Channel, {
     pivotTable: 'channel_users', // The name of the pivot table
     pivotTimestamps: false, // Automatically manage timestamps in pivot table if needed

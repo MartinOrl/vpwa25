@@ -1,13 +1,18 @@
 import { HttpContext } from '@adonisjs/core/http'
 import KickVote from '#models/kick_vote'
-import db from '@adonisjs/lucid/services/db'
 import User from '#models/user'
 import Message from '#models/message'
 import transmit from '@adonisjs/transmit/services/main'
 import Channel from '#models/channel'
 
 const notifyChannel = (channelId: number, message: any) => {
-  transmit.broadcast(`chat/${channelId}`, message)
+  transmit.broadcast(
+    `chat/${channelId}`,
+    JSON.stringify({
+      event: 'message:new',
+      data: message,
+    })
+  )
 }
 
 export default class KickController {

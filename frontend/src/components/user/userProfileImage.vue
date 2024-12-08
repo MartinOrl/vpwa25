@@ -21,10 +21,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { type CSSProperties } from 'vue'
 import { palette } from '@/css/theme'
+import { sanitizeStatus } from '@/stores/authStore'
+import { useUsersStore } from '@/stores/usersStore'
 import { User, UserStatus } from '@/utils/types/user'
+
+const usersStore = useUsersStore()
 
 const _props = defineProps({
   user: {
@@ -41,15 +45,28 @@ const _props = defineProps({
   },
 })
 
+const _userRef = computed(() => _props.user)
+
 const generateAvatarLink = (firstName: string, lastName: string) => {
   return `https://eu.ui-avatars.com/api/?name=${firstName}+${lastName}&size=64`
 }
 
-const profileImage = computed(() => {
-  return (
-    _props.user.profilePicture ||
-    generateAvatarLink(_props.user.firstName, _props.user.lastName)
-  )
+const profileImage = ref<string>(
+  _userRef.value?.profilePicture ||
+    generateAvatarLink(_userRef.value.firstName, _userRef.value.lastName),
+)
+
+const _status = ref(_userRef.value.status)
+
+usersStore.$subscribe(() => {
+  const userMatch = usersStore.findUserById(_userRef.value.id)
+  _status.value = sanitizeStatus(userMatch?.status as string) as UserStatus
+  profileImage.value =
+    userMatch?.profilePicture ||
+    generateAvatarLink(
+      userMatch?.firstName as string,
+      userMatch?.lastName as string,
+    )
 })
 
 const statusStyles = computed<CSSProperties>(() => ({
@@ -66,13 +83,11 @@ const statusStyles = computed<CSSProperties>(() => ({
 }))
 
 const statusDotStyles = computed<CSSProperties>(() => {
-  const status = _props.user.status
-  console.log(status)
   return {
     background:
-      status === UserStatus.ONLINE
+      _status.value === UserStatus.ONLINE
         ? palette.status.ONLINE
-        : status === UserStatus.DO_NOT_DISTURB
+        : _status.value === UserStatus.DO_NOT_DISTURB
         ? palette.status.DO_NOT_DISTURB
         : palette.status.OFFLINE,
     width: '70%',

@@ -128,6 +128,7 @@
 import { computed, onBeforeMount, ref } from 'vue'
 import type { CSSProperties } from 'vue'
 import { palette, spacing } from '@/css/theme'
+import { sanitizeStatus } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { useUsersStore } from '@/stores/usersStore'
@@ -136,7 +137,8 @@ import { Events } from '@/utils/types/command'
 import { User, UserStatus } from '@/utils/types/user'
 import UserProfileImage from '../user/userProfileImage.vue'
 
-const { getChannelById, getActiveChannel } = useChannelStore()
+const { getChannelById, getActiveChannel, findChannelByName } =
+  useChannelStore()
 const commandStore = useCommandStore()
 const channelStore = useChannelStore()
 const { findUserById } = useUsersStore()
@@ -154,11 +156,13 @@ const toggleMembersToolbar = () => {
   membersToolbar.value = !membersToolbar.value
 }
 
-const openMembersToolbar = () => {
+const openMembersToolbar = async () => {
   const activeChannel = getActiveChannel() as ChannelInfo
   channelId.value = activeChannel.id
 
   document.body.style.overflow = 'hidden'
+
+  await channelStore.reloadMembers(activeChannel.name)
 
   membersToolbar.value = true
 }
@@ -170,12 +174,10 @@ channelStore.$subscribe(() => {
 
 commandStore.$subscribe(() => {
   const eventType = commandStore.event?.type as string
-  const eventData = commandStore.event?.data as number
+  const eventData = commandStore.event?.data as string
   if (eventType === Events.ListChannelMembers) {
-    console.log('ListChannelMembers', eventData)
-
     if (eventData) {
-      channelId.value = Number(eventData)
+      channelId.value = findChannelByName(eventData)?.id as number
     } else {
       const activeChannel = getActiveChannel() as ChannelInfo
       channelId.value = activeChannel.id
@@ -207,11 +209,12 @@ const channelMembersInfo = computed(() => {
   members.forEach((member) => {
     const user = findUserById(member.userId)
     if (user) {
-      users.push(user)
+      users.push({
+        ...user,
+        status: sanitizeStatus(user.status) as UserStatus,
+      })
     }
   })
-
-  console.log('Members users', users)
 
   const matchUserWithMember = (userId: number) => {
     return members.find((member) => member.userId === userId)

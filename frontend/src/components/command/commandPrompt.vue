@@ -109,7 +109,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties, VNodeRef } from 'vue'
 import { api } from '@/boot/axios'
 import { palette, spacing } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
+import { sanitizeStatus, useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { useUsersStore } from '@/stores/usersStore'
@@ -133,7 +133,15 @@ const commandInput = ref('')
 const commandField = ref<VNodeRef | null>(null)
 const commandListMenuOpen = ref(false)
 const suggestionsOpen = ref(false)
-const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
+const isOffline = ref(user?.status === UserStatus.OFFLINE)
+
+const authStore = useAuthStore()
+
+authStore.$subscribe(() => {
+  isOffline.value =
+    sanitizeStatus(authStore.user?.status as UserStatus) ===
+    sanitizeStatus(UserStatus.OFFLINE)
+})
 
 const openCommandsMenu = async () => {
   commandListMenuOpen.value = true

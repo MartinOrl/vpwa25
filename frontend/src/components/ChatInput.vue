@@ -68,7 +68,7 @@ import type { CSSProperties } from 'vue'
 import { backendTransmit } from '@/boot/transmit'
 import ButtonControl from '@/components/control/ButtonControl.vue'
 import { palette, spacing } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
+import { sanitizeStatus, useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { useCommandStore } from '@/stores/commandStore'
 import { Events } from '@/utils/types/command'
@@ -86,7 +86,16 @@ const userTyping = ref({
   message: '',
 })
 const showTyping = ref(false)
-const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
+const isOffline = ref(user?.status === UserStatus.OFFLINE)
+
+const authStore = useAuthStore()
+
+authStore.$subscribe(() => {
+  isOffline.value =
+    sanitizeStatus(authStore.user?.status as UserStatus) ===
+    sanitizeStatus(UserStatus.OFFLINE)
+})
+
 const activeChannel = ref(getActiveChannel())
 
 channelStore.$subscribe(() => {
@@ -116,6 +125,7 @@ if (activeChannel.value) {
   isTypingSub.create()
   isTypingSub.onMessage((data: string) => {
     const { message, name } = JSON.parse(data)
+    if (name === user?.nickName) return
     if (!message) {
       isUserTyping.value = false
     } else {
@@ -174,6 +184,7 @@ const isTypingStyles = computed<CSSProperties>(() => ({
   padding: `${spacing(2)} ${spacing(3)}`,
   opacity: isUserTyping.value ? 1 : 0,
   transition: 'opacity 0.3s',
+  transform: isUserTyping.value ? 'translateY(0)' : 'translateY(100%)',
   zIndex: 1,
 }))
 

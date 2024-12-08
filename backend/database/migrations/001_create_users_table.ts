@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('email').notNullable() // email column
       table.string('password').notNullable() // password column
       table.string('profilePicture').nullable() // profilePicture column, optional
+      table.enum('notifications', ['default', 'mention']).notNullable().defaultTo('default') // notifications column, ENUM
       table
         .enum('status', ['OFFLINE', 'ONLINE', 'DO_NOT_DISTURB'])
         .notNullable()

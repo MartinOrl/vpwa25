@@ -6,21 +6,28 @@
       width: '2.75rem',
     }"
   >
-    <UserProfileImage :user="user" :size="42" :show-user-status="true" />
+    <UserProfileImage :user="_user" :size="42" :show-user-status="true" />
 
     <UserOptionsPopup />
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineComponent } from 'vue'
+import { computed, defineComponent, ref, watch } from 'vue'
 import { spacing } from '@/css/theme'
 import { useAuthStore } from '@/stores/authStore'
 import { User } from '@/utils/types/user'
 import UserOptionsPopup from '../popup/UserOptionsPopup.vue'
 import UserProfileImage from '../user/userProfileImage.vue'
 
-const { user } = useAuthStore() as { user: User }
+const { user } = useAuthStore()
+
+const _counter = computed(() => user?.status)
+const _user = ref(user as User)
+
+watch(_counter, () => {
+  _user.value = user as User
+})
 
 defineComponent({
   setup() {

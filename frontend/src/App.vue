@@ -11,6 +11,8 @@ window.addEventListener('offline', () => {
   console.log('App is offline')
 })
 
+Notification.requestPermission()
+
 defineOptions({
   name: 'App',
 })

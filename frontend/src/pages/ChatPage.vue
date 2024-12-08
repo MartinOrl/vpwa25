@@ -31,9 +31,9 @@
         bottom: 0,
         left: 0,
         width: '100%',
-        overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
       }"
       id="chat-overflow"
     >
@@ -64,6 +64,11 @@
         }"
         v-if="!isNoChannelSelected"
       >
+        <div v-if="loading">
+          <div class="row justify-center q-my-md">
+            <q-spinner color="#000" name="dots" size="40px" />
+          </div>
+        </div>
         <div
           v-for="(msg, index) in messages"
           :key="index"
@@ -88,22 +93,49 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
-import { computed, nextTick, onBeforeMount, onUpdated, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  onUpdated,
+  ref,
+  watch,
+} from 'vue'
 import ChannelMessage from '@/components/channel/channelMessage.vue'
 import MessageDateSeparator from '@/components/channel/messageDateSeparator.vue'
 import ChatInput from '@/components/ChatInput.vue'
 import { palette, spacing } from '@/css/theme'
-import { useAuthStore } from '@/stores/authStore'
+import { sanitizeStatus, useAuthStore } from '@/stores/authStore'
 import { useChannelStore } from '@/stores/channelStore'
 import { UserStatus } from '@/utils/types/user'
 const channelStore = useChannelStore()
 const { user } = useAuthStore()
 
-const isOffline = computed(() => user?.status === UserStatus.OFFLINE)
+const isOffline = ref(user?.status === UserStatus.OFFLINE)
+
+const authStore = useAuthStore()
+
+authStore.$subscribe(() => {
+  isOffline.value =
+    sanitizeStatus(authStore.user?.status as UserStatus) ===
+    sanitizeStatus(UserStatus.OFFLINE)
+})
 
 const isNoChannelSelected = ref(
   (channelStore.getUserChannels(user?.id as number) ?? []).length === 0,
 )
+const loading = ref(false)
+const loaded = ref(false)
+
+const _loadMessages = async () => {
+  loading.value = true
+  console.log('loading messages')
+  // await channelStore.loadMessages()
+  await new Promise((resolve) => setTimeout(resolve, 8000))
+  loading.value = false
+}
 
 const activeChannelId = ref(channelStore.getActiveChannel()?.id as number)
 
@@ -114,6 +146,35 @@ const activeChannel = computed(() => {
 
 const $q = useQuasar()
 
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement
+  // console.log(target.scrollTop)
+  if (
+    target.scrollTop <= 300 &&
+    messages.value.length > 20 &&
+    !loading.value &&
+    loaded.value
+  ) {
+    _loadMessages()
+  }
+}
+
+onMounted(() => {
+  const chatContainer = document.querySelector('#chat-overflow') as HTMLElement
+  const child = chatContainer?.firstElementChild as HTMLElement
+
+  if (child.clientHeight < chatContainer.clientHeight) {
+    console.log('load more messages')
+  }
+
+  chatContainer?.addEventListener('scroll', handleScroll)
+})
+
+onBeforeUnmount(() => {
+  const chatContainer = document.querySelector('#chat-overflow')
+  chatContainer?.removeEventListener('scroll', handleScroll)
+})
+
 watch(
   () => $q.appVisible,
   async (isVisible) => {
@@ -122,6 +183,11 @@ watch(
     }
   },
 )
+
+watch(isOffline, () => {
+  if (!isOffline.value) {
+  }
+})
 
 onBeforeMount(async () => {
   await channelStore.load()
@@ -156,6 +222,8 @@ onUpdated(async () => {
     top: chatContainer.scrollHeight,
     behavior: 'smooth',
   })
+  await nextTick()
+  loaded.value = true
 })
 
 const getShowDateSeparator = (index: number) => {

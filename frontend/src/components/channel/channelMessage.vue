@@ -103,8 +103,19 @@ const processedContent = computed(() => {
 })
 
 const userData = computed(() => {
+  console.log(props.message.senderId)
   const user = findUserById(props.message.senderId) as User
-  return user
+  return (
+    user || {
+      firstName: '',
+      lastName: '',
+      email: '',
+      nickName: '',
+      profilePicture: '',
+      id: 0,
+      status: 0,
+    }
+  )
 })
 
 const convertTimestampToReadable = () => {

@@ -219,13 +219,15 @@ const { getChannels, getActiveChannel } = channelStore
 
 const channels = ref(getChannels())
 
-const _activeChannel = computed(() => getActiveChannel())
+const _activeChannel = ref(getActiveChannel())
 
 watch(_activeChannel, () => {
+  console.log('Main layout active channel changed')
   channelMenu.value = false
 })
 
 channelStore.$subscribe(() => {
+  _activeChannel.value = getActiveChannel()
   channels.value = getChannels()
 })
 
@@ -264,7 +266,7 @@ const utilsStyles = computed<CSSProperties>(() => ({
 const drawerStyles = computed<CSSProperties>(() => {
   const windowWidth = window.innerWidth
   return {
-    maxWidth: windowWidth > 1280 ? containers.sidebar : 'none',
+    maxWidth: windowWidth > 768 ? containers.sidebar : 'none',
     width: '100%',
     border: 'none',
     flex: '1',

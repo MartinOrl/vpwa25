@@ -16,7 +16,9 @@ export default class AuthController {
   public async login(ctx: HttpContext) {
     const { request, auth, response } = ctx
     const { email, password } = request.only(['email', 'password'])
-
+    if (email === 'system') {
+      return response.unauthorized({ message: 'Invalid credentials' })
+    }
     try {
       // Find the user by email
       const user = await User.findBy('email', email)

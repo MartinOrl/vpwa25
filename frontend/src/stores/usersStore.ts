@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { UserStatus, type User } from '@/utils/types/user'
+import { useAuthStore } from './authStore'
 
 export const useUsersStore = defineStore('users', {
   state: () => ({
@@ -19,6 +20,7 @@ export const useUsersStore = defineStore('users', {
       this.users = this.users.filter((u) => u.id !== user.id)
     },
     findUserById(id: number) {
+      console.log(this.users)
       return this.users.find((u) => u.id === id)
     },
     findUserByNickname(nickname: string) {
@@ -26,6 +28,10 @@ export const useUsersStore = defineStore('users', {
     },
     updateUserStatus(id: number, status: UserStatus) {
       const user = this.users.find((u) => u.id === id)
+      const { user: appUser } = useAuthStore()
+      if (appUser?.id === id) {
+        appUser.status = status
+      }
       if (user) {
         user.status = status
       }
@@ -34,6 +40,14 @@ export const useUsersStore = defineStore('users', {
       const index = this.users.findIndex((u) => u.id === user.id)
       if (index !== -1) {
         this.users[index] = user
+      }
+    },
+    addOrUpdateUser(user: User) {
+      const index = this.users.findIndex((u) => u.id === user.id)
+      if (index !== -1) {
+        this.users[index] = user
+      } else {
+        this.users.push(user)
       }
     },
   },

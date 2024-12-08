@@ -51,6 +51,7 @@ export const ChannelJoinedEvent: ServerEventHandler = {
       })),
       messages: channel.messages,
     }
+    console.log('joined', channelObj)
     bindChannelMessageListener(channel.id)
     addChannel(channelObj)
   },

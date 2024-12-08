@@ -17,7 +17,13 @@ export default class MessageController {
     })
 
     console.log('Broadcasting message to channel:', messageData.channelID, newMessage.toJSON())
-    transmit.broadcast(`chat/${messageData.channelID}`, newMessage.toJSON())
+    transmit.broadcast(
+      `chat/${messageData.channelID}`,
+      JSON.stringify({
+        event: 'message:new',
+        data: newMessage.toJSON(),
+      })
+    )
 
     transmit.broadcast(
       `channel/${messageData.channelID}/typing`,

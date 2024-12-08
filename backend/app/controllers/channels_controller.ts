@@ -5,7 +5,13 @@ import transmit from '@adonisjs/transmit/services/main'
 import User from '#models/user'
 
 const notifyChannel = (channelId: number, message: any) => {
-  transmit.broadcast(`chat/${channelId}`, message)
+  transmit.broadcast(
+    `chat/${channelId}`,
+    JSON.stringify({
+      event: 'message:new',
+      data: message,
+    })
+  )
 }
 
 const cancelTyping = (channelId: number) => {
@@ -77,7 +83,6 @@ export default class ChannelsController {
     if (!channel) {
       const ownerId = auth.user!.id
       const newChannel = await Channel.create({ name, privacy, ownerId })
-
       await Message.create({
         channelID: newChannel.id,
         senderID: 0,
@@ -90,6 +95,7 @@ export default class ChannelsController {
         .preload('messages')
         .first()
 
+      console.log('Broadcasting new channel to user', auth.user!.id)
       transmit.broadcast(
         `events/user/${auth.user!.id}`,
         JSON.stringify({

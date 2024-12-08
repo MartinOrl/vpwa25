@@ -22,8 +22,7 @@ const cancelChannelSubCommand: Command = {
     const { getActiveChannel } = useChannelStore()
     const channelToLeave = args?.[0] || getActiveChannel()?.name
 
-    const res = await api.post(`/channel/${channelToLeave}/leave`)
-    console.log('res', res)
+    const _res = await api.post(`/channel/${channelToLeave}/leave`)
   },
 }
 

@@ -10,7 +10,7 @@ enum ChannelRole {
 }
 
 type ChannelMessage = {
-  messageId: number
+  id: number
   content: string
   timestamp: string
   senderId: number

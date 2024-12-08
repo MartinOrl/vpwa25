@@ -48,66 +48,6 @@ const joinChannelCommand: Command = {
       name: channelName,
       privacy,
     })
-
-    // const {
-    //   matchChannel,
-    //   addChannel,
-    //   addChannelMember,
-    //   sendCustomMessage,
-    //   setActiveChannel,
-    //   isChannelMember,
-    // } = useChannelStore()
-
-    // const channel = matchChannel(channelName, privacy)
-
-    // const channelsWithSameName =
-    //   matchChannel(channelName, ChannelPrivacy.PRIVATE) ||
-    //   matchChannel(channelName, ChannelPrivacy.PUBLIC)
-
-    // if (channel) {
-    //   if (channel.privacy === ChannelPrivacy.PUBLIC) {
-    //     if (isChannelMember(channel.id)) {
-    //       return
-    //     }
-
-    //     addChannelMember(channel.id, user?.id as number)
-    //     sendCustomMessage(channel.id, {
-    //       channelId: channel.id,
-    //       senderID: 0,
-    //       content: `${user?.nickName} has joined the channel`,
-    //       timestamp: new Date().toISOString(),
-    //       messageID: 100 + Math.floor(Math.random() * 1000),
-    //     })
-    //     setActiveChannel(channel)
-    //   }
-    // } else {
-    //   if (channelsWithSameName) {
-    //     return
-    //   }
-    //   const channelObj = {
-    //     id: 100 + Math.floor(Math.random() * 1000),
-    //     name: channelName,
-    //     privacy: privacy,
-    //     slug: channelName.toLowerCase().replace(' ', '-'),
-    //     members: [
-    //       {
-    //         userId: user?.id || 0,
-    //         role: ChannelRole.ADMIN,
-    //         joinedAt: new Date().toISOString(),
-    //         kickCount: 0,
-    //       },
-    //     ],
-    //     messages: [],
-    //   }
-    //   addChannel(channelObj)
-    //   sendCustomMessage(channelObj.id, {
-    //     channelId: channelObj.id,
-    //     senderID: 0,
-    //     content: `${user?.nickName} created the channel`,
-    //     timestamp: new Date().toISOString(),
-    //     messageID: 100 + Math.floor(Math.random() * 1000),
-    //   })
-    // }
   },
 }
 
