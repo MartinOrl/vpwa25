@@ -16,8 +16,13 @@
     "web:lint": "yarn workspace frontend lint",
     "web:format-check": "yarn workspace frontend format:check",
     "web:format": "yarn workspace frontend format",
-    "web:build": "yarn workspace frontend build"
+    "web:build": "yarn workspace frontend build",
+    "dev": "concurrently \"yarn web:dev\" \"yarn workspace backend dev\"",
+    "backend:dev": "yarn workspace backend dev"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
 }
