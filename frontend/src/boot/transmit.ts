@@ -8,7 +8,7 @@ declare module 'vue' {
 }
 
 const backendTransmit = new Transmit({
-  baseUrl: 'http://localhost:3001',
+  baseUrl: 'https://192.168.210.164:3001',
 })
 
 export default boot(({ app }) => {

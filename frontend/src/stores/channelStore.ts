@@ -253,6 +253,7 @@ export const useChannelStore = defineStore('channel', {
     },
 
     addChannel(channel: ChannelData, setActive = true) {
+      if (!this.channels?.find((c) => c.id === channel.id)) return
       this.channels?.push(channel)
       if (setActive) {
         this.setActiveChannel(channel)

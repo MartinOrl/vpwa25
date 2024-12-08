@@ -21,6 +21,12 @@ export default defineConfig({
   | application
   |
   */
+  metaFiles: [
+    {
+      pattern: 'sslCert/*',
+      reloadServer: false,
+    },
+  ],
   providers: [
     () => import('@adonisjs/core/providers/app_provider'),
     () => import('@adonisjs/core/providers/hash_provider'),
@@ -32,7 +38,7 @@ export default defineConfig({
     () => import('@adonisjs/cors/cors_provider'),
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
-    () => import('@adonisjs/transmit/transmit_provider')
+    () => import('@adonisjs/transmit/transmit_provider'),
   ],
 
   /*
