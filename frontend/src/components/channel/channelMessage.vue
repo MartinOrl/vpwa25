@@ -108,6 +108,7 @@ const userData = computed(() => {
 })
 
 const convertTimestampToReadable = () => {
+  console.log('convertTimestampToReadable', props.message.timestamp)
   const date = new Date(props.message.timestamp)
   return date.toLocaleTimeString('en-US', {
     hour: '2-digit',

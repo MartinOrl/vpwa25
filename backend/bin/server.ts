@@ -41,10 +41,23 @@ const IMPORTER = (filePath: string) => {
   return import(filePath)
 }
 
-new Ignitor(APP_ROOT, { importer: IMPORTER })
-  .tap((app) => {
-    app.booting(async () => {
-      await import('#start/env')
+pem
+  .createCertificate({ days: 3, selfSigned: true }, (error, keys) => {
+    if (error) {
+      console.error(error)
+    }
+
+    const options = {
+      key: keys.serviceKey,
+      cert: keys.certificate,
+    }
+
+    new Ignitor(APP_ROOT).tap((app) => {
+      app.booting(async () => {
+        await import('#start/env')
+      })
+      app.listen('SIGTERM', () => app.terminate())
+      app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())
     })
     app.listen('SIGTERM', () => app.terminate())
     app.listenIf(app.managedByPm2, 'SIGINT', () => app.terminate())

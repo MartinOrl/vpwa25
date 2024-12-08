@@ -11,7 +11,8 @@
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
-    "build": "quasar build"
+    "build": "quasar build",
+    "dev:pwa": "quasar dev -m pwa"
   },
   "dependencies": {
     "@adonisjs/transmit-client": "^1.0.0",
@@ -19,7 +20,9 @@
     "@types/axios": "^0.14.0",
     "axios": "^1.2.1",
     "core-js": "^3.31.1",
+    "crypto": "^1.0.1",
     "pinia": "^2.0.11",
+    "pinia-plugin-persistedstate": "^4.1.3",
     "qs": "^6.13.1",
     "quasar": "^2.16.0",
     "socket.io-client": "^4.8.1",
@@ -36,7 +39,9 @@
     "eslint-import-resolver-webpack": "^0.13.9",
     "eslint-plugin-import": "^2.30.0",
     "eslint-plugin-vue": "^9.0.0",
-    "prettier": "^2.5.1"
+    "eslint-webpack-plugin": "^4.2.0",
+    "prettier": "^2.5.1",
+    "workbox-webpack-plugin": "^7.0.0"
   },
   "overridesComments": {
     "typescript-1": "npm and pnpm hoist newer version of TypeScript, which is incompatible with app-webpack v3 due to fork-ts-checker-webpack-plugin",

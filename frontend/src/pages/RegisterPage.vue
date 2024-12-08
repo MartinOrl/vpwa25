@@ -122,6 +122,7 @@ import ButtonControl from '@/components/control/ButtonControl.vue'
 import QInputComponent from '@/components/input/QInput.vue'
 import { containers, spacing, palette } from '@/css/theme'
 import { ValidationRule } from '@/utils/types/misc'
+// import { useAuthStore } from '@/stores/authStore'
 // const router = useRouter()
 
 // Reactive state for input
@@ -169,7 +170,9 @@ const handleRegister = async () => {
     nickName: form.nickName,
     password: form.password,
   })
-  console.log('User registered', res.data)
+  console.log('User registered', res.data.user)
+  // const { login } = useAuthStore()
+  // login(res.data.user)
 
   // router.push('/chat')
 }

@@ -207,6 +207,7 @@ export const useAuthStore = defineStore('auth', {
       // attachDefaultEventListener(user.id)
       bindEventListener(user.id)
     },
+
     logout() {
       this.user = null
       this.token = null
